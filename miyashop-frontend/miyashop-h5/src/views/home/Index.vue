@@ -161,9 +161,7 @@ const goProduct = (id: number) => {
 }
 
 const goCategory = (item: any) => {
-  // 跳转到分类搜索
-  searchText.value = item.name
-  console.log('跳转分类:', item.name)
+  window.location.hash = `#/category/${encodeURIComponent(item.name)}`
 }
 
 onMounted(() => {

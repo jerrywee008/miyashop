@@ -20,9 +20,11 @@ import FavoritesPage from '@/views/user/Favorites.vue'
 import SettingsPage from '@/views/user/Settings.vue'
 import BalancePage from '@/views/user/Balance.vue'
 import HistoryPage from '@/views/user/History.vue'
+import CategoryList from '@/views/category/List.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'Home', component: HomePage, meta: { title: '首页', keepAlive: true } },
+  { path: '/category/:name', name: 'CategoryList', component: CategoryList, meta: { title: '分类商品' } },
   { path: '/login', name: 'Login', component: LoginPage, meta: { title: '登录' } },
   { path: '/product/:id', name: 'ProductDetail', component: ProductDetail, meta: { title: '商品详情' } },
   { path: '/cart', name: 'Cart', component: CartPage, meta: { title: '购物车' } },
