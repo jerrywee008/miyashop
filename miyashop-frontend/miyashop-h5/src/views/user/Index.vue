@@ -7,11 +7,11 @@
         <div class="user-avatar" @click="goLogin" v-if="!isLoggedIn">
           <van-icon name="user-o" size="40" color="#FF6B95" />
         </div>
-        <div class="user-avatar" v-else @click="$router.push('/user/profile')">
+        <div class="user-avatar" v-else @click="window.location.hash = '#/user/profile'">
           <img :src="userInfo?.avatar || defaultAvatar" />
         </div>
         <div class="user-info" v-if="isLoggedIn">
-          <div class="user-name" @click="$router.push('/user/profile')">{{ userInfo?.nickname || '用户' }}</div>
+          <div class="user-name" @click="window.location.hash = '#/user/profile'">{{ userInfo?.nickname || '用户' }}</div>
           <div class="user-level">
             <van-tag type="danger" size="mini" round>Lv.{{ userInfo?.level || 1 }}</van-tag>
           </div>
@@ -48,7 +48,7 @@
 
     <!-- 订单 -->
     <div class="order-section">
-      <div class="section-header" @click="$router.push('/order/list')">
+      <div class="section-header" @click="window.location.hash = '#/order/list'">
         <span class="section-title">我的订单</span>
         <span class="section-more">查看全部 <van-icon name="arrow" /></span>
       </div>
@@ -135,21 +135,21 @@ const orderNav = [
 ]
 
 const goLogin = () => {
-  router.push('/login')
+  window.location.hash = '#/login'
 }
 
 const goOrderList = (status?: number) => {
   if (status !== undefined && status >= 0) {
-    router.push(`/order/list?status=${status}`)
+    window.location.hash = '#/order/list?status=' + status
   } else {
-    router.push('/order/list')
+    window.location.hash = '#/order/list'
   }
 }
 
-const goCoupons = () => router.push('/user/coupons')
-const goFavorites = () => router.push('/user/favorites')
-const showBalance = () => router.push('/user/balance')
-const goSettings = () => router.push('/user/settings')
+const goCoupons = () => window.location.hash = '#/user/coupons'
+const goFavorites = () => window.location.hash = '#/user/favorites'
+const showBalance = () => window.location.hash = '#/user/balance'
+const goSettings = () => window.location.hash = '#/user/settings'
 
 const handleLogout = async () => {
   try {

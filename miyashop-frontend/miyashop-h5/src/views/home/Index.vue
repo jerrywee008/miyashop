@@ -106,6 +106,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'HomePage' })
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'

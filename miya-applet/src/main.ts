@@ -15,11 +15,11 @@ const pinia = createPinia()
 app.config.errorHandler = (err, instance, info) => {
   const errStr = err instanceof Error ? (err.message || String(err)) : JSON.stringify(err)
   const stack = err instanceof Error ? (err.stack || '') : ''
-  // 尝试从 instance 获取更多信息
   let compPath = ''
   if (instance) {
-    compPath = (instance.$options?.name || instance.$.type?.__name || '?') +
-               (instance.$.type?.__file ? ' @' + instance.$.type.__file.split('/').slice(-2).join('/') : '')
+    const type = instance.type || (instance.$ as any)?.type || {}
+    compPath = (type.name || type.__name || instance.$options?.name || '?') +
+               (type.__file ? ' @' + type.__file.split('/').slice(-2).join('/') : '')
   }
   console.error('[Vue Error]', err, '| info:', info, '| component:', compPath, '| stack:', stack.substring(0,300))
 }
