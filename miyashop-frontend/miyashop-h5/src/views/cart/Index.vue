@@ -15,7 +15,7 @@
       image="shopping-cart-o"
       description="购物车还是空的"
     >
-      <van-button type="danger" round to="/" custom-style="background: #FF6B95; border-color: #FF6B95">
+      <van-button type="danger" round custom-style="background: #FF6B95; border-color: #FF6B95" @click="goTab('/')">
         去逛逛
       </van-button>
     </van-empty>
@@ -117,14 +117,27 @@
     </van-submit-bar>
 
     <!-- 底部导航 -->
-    <van-tabbar v-model="activeTab" route active-color="#FF6B95" fixed>
-      <van-tabbar-item to="/" icon="home-o">首页</van-tabbar-item>
-      <van-tabbar-item to="/seckill" icon="fire-o">秒杀</van-tabbar-item>
-      <van-tabbar-item to="/cart" icon="shopping-cart-o" :badge="cartCount > 0 ? cartCount : null">
-        购物车
-      </van-tabbar-item>
-      <van-tabbar-item to="/user" icon="user-o">我的</van-tabbar-item>
-    </van-tabbar>
+    <div class="custom-tabbar">
+      <div class="tabbar-item" :class="{ active: activeTab === 0 }" @click="goTab('/')">
+        <span class="tabbar-icon">🏠</span>
+        <span class="tabbar-label">首页</span>
+      </div>
+      <div class="tabbar-item" :class="{ active: activeTab === 1 }" @click="goTab('/seckill')">
+        <span class="tabbar-icon">⚡</span>
+        <span class="tabbar-label">秒杀</span>
+      </div>
+      <div class="tabbar-item" :class="{ active: activeTab === 2 }" @click="goTab('/cart')">
+        <div class="tabbar-icon-wrap">
+          <span class="tabbar-icon">🛒</span>
+          <span class="tabbar-badge" v-if="cartCount > 0">{{ cartCount > 99 ? '99+' : cartCount }}</span>
+        </div>
+        <span class="tabbar-label">购物车</span>
+      </div>
+      <div class="tabbar-item" :class="{ active: activeTab === 3 }" @click="goTab('/user')">
+        <span class="tabbar-icon">👤</span>
+        <span class="tabbar-label">我的</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -269,13 +282,17 @@ const handleSubmit = () => {
       type: i.type
     }))
     localStorage.setItem('checkoutItems', JSON.stringify(checkoutItems))
-    router.push('/checkout')
+    window.location.hash = '#/checkout'
   }
 }
 
 const goProduct = (item: any) => {
   if (editMode.value) return
-  router.push(`/product/${item.productId}`)
+  window.location.hash = `#/product/${item.productId}`
+}
+
+const goTab = (path: string) => {
+  window.location.hash = '#' + path
 }
 
 // ---------- 推荐商品 ----------
@@ -504,6 +521,68 @@ onMounted(() => {
 .discount-amount {
   color: var(--primary-color);
   font-weight: 600;
+}
+
+/* ========== 自定义底部导航 ========== */
+.custom-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 50px;
+  background: #fff;
+  border-top: 1px solid #eee;
+  z-index: 999;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  gap: 2px;
+}
+
+.tabbar-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tabbar-label {
+  font-size: 15px;
+  color: #666;
+}
+
+.tabbar-item.active .tabbar-label {
+  color: #FF6B95;
+}
+
+.tabbar-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tabbar-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #FF6B95;
+  color: #fff;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
 }
 
 /* ========== PC 宽屏 ========== */
