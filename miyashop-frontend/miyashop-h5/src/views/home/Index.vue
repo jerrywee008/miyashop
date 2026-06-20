@@ -157,11 +157,12 @@ const recommendProducts = ref([
 ])
 
 const goProduct = (id: number) => {
-  router.push(`/product/${id}`)
+  window.location.hash = `#/product/${id}`
 }
 
 const goCategory = (item: any) => {
-  // TODO: 跳转到分类页
+  // 跳转到分类搜索
+  searchText.value = item.name
   console.log('跳转分类:', item.name)
 }
 
