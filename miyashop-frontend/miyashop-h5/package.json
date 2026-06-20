@@ -1,0 +1,29 @@
+{
+  "name": "miyashop-h5",
+  "version": "1.0.0",
+  "description": "MiyaShop移动端商城",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "pinia": "^2.1.7",
+    "axios": "^1.6.7",
+    "vant": "^4.8.11",
+    "@vant/touch-emulator": "^1.4.0",
+    "dayjs": "^1.11.10"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "typescript": "^5.4.2",
+    "vue-tsc": "^2.0.6",
+    "vite": "^5.1.6",
+    "unplugin-vue-components": "^0.26.0",
+    "unplugin-auto-import": "^0.17.5",
+    "postcss-pxtorem": "^6.1.0"
+  }
+}

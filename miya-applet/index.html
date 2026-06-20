@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>MiyaShop</title>
+    <!-- Capacitor WKWebView JS 上下文初始化 -->
+    <script>;</script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- Capacitor WKWebView 需要在 body 中有 DOM 操作的 script -->
+    <div id="_c" style="display:none"></div>
+    <script>
+      document.getElementById('_c').textContent = '1';
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

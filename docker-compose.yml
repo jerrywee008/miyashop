@@ -1,0 +1,93 @@
+version: "3.8"
+
+# ========================================
+# MiyaShop 电商系统 — Docker Compose
+# ========================================
+
+services:
+  # ---------- MySQL ----------
+  mysql:
+    image: mysql:8.0
+    container_name: miyashop-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: miya-2022
+      MYSQL_DATABASE: miyashop
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./miyashop-backend/miyashop-web/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------- Redis ----------
+  redis:
+    image: redis:7-alpine
+    container_name: miyashop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------- Spring Boot 后端 ----------
+  backend:
+    build:
+      context: ./miyashop-backend
+      dockerfile: Dockerfile
+    container_name: miyashop-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/miyashop?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: miya-2022
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # 覆盖 RabbitMQ（无 RabbitMQ 时不阻塞）
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ---------- 后台管理系统 ----------
+  admin:
+    build:
+      context: ./miyashop-frontend/miyashop-admin
+      dockerfile: Dockerfile
+    container_name: miyashop-admin
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # ---------- 移动端商城 ----------
+  h5:
+    build:
+      context: ./miyashop-frontend/miyashop-h5
+      dockerfile: Dockerfile
+    container_name: miyashop-h5
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:
+  redis-data:

@@ -1,0 +1,320 @@
+:root {
+  --primary-color: #FF6B95;
+  --primary-hover: #FF5580;
+  --text-primary: #333333;
+  --text-secondary: #999999;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --border-color: #E5E5E5;
+  --danger-color: #F56C6C;
+  --success-color: #67C23A;
+  --warning-color: #E6A23C;
+  --gold-color: #C9A96E;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.van-button--primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.van-button--primary:active {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.van-tabbar-item--active {
+  color: var(--primary-color);
+}
+
+.page-container {
+  padding: 12px;
+  background: var(--bg-primary);
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+.product-card {
+  background: var(--bg-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.product-info {
+  padding: 12px;
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.product-price::before {
+  content: '¥';
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+.seckill-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, #FF6B95, #FF5580);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 8px 0 8px 0;
+  font-size: 12px;
+}
+
+.groupbuy-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, #FF6B95, #FF5580);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 8px 0 8px 0;
+  font-size: 12px;
+}
+
+/* ========== PC / Mac 宽屏适配 ========== */
+@media screen and (min-width: 768px) {
+  /* --- 隐藏移动端专属元素 --- */
+  .van-tabbar {
+    display: none !important;
+  }
+
+  /* --- 居中约束所有固定/粘性元素 --- */
+  .van-nav-bar {
+    max-width: 1200px;
+    margin: 0 auto;
+    left: 50% !important;
+    transform: translateX(-50%);
+    width: 100%;
+  }
+
+  .van-tabs {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* 底部操作栏居中 */
+  .van-submit-bar {
+    max-width: 1200px;
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+
+  .van-action-bar {
+    max-width: 1200px;
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+
+  /* --- 页面级别的底部内边距在 PC 端移除 --- */
+  /* 购物车页、订单列表、商品详情等普通页面 */
+  [class*="-page"] {
+    padding-bottom: 0 !important;
+  }
+
+  /* 带 tabbar 的首页、秒杀、团购、个人中心 */
+  .home-page,
+  .seckill-page,
+  .groupbuy-page,
+  .cart-page,
+  .order-list-page,
+  .order-detail-page,
+  .product-detail-page,
+  .checkout-page,
+  .user-page {
+    padding-bottom: 0 !important;
+  }
+
+  /* --- 商品列表页：双列 → 四列 --- */
+  .seckill-products {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 32px;
+  }
+
+  .seckill-product-item {
+    flex-direction: column;
+  }
+
+  .seckill-product-item .product-image {
+    width: 100%;
+    height: 200px;
+  }
+
+  /* --- 团购列表：单列 → 双列 --- */
+  .groupbuy-products {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 32px;
+  }
+
+  .groupbuy-product-item .product-image {
+    height: 240px;
+  }
+
+  /* --- 订单列表卡片加宽 --- */
+  .order-list {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* --- 订单详情居中 --- */
+  .order-detail-page > div:not(.van-nav-bar):not(.status-section) {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* --- 商品详情 PC 布局 --- */
+  .product-detail-page .image-swiper {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .product-detail-page .detail-image {
+    height: 500px;
+    object-fit: contain;
+  }
+
+  .product-detail-page .price-section,
+  .product-detail-page .promotion-section,
+  .product-detail-page .spec-section,
+  .product-detail-page .quantity-section,
+  .product-detail-page .delivery-section,
+  .product-detail-page .review-section,
+  .product-detail-page .detail-section {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+
+  /* --- 购物车 --- */
+  .cart-list {
+    max-width: 900px;
+    margin: 0 auto 0;
+  }
+
+  .cart-group {
+    border-radius: 8px;
+  }
+
+  .cart-item {
+    align-items: flex-start;
+  }
+
+  .item-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  /* --- 结算页 --- */
+  .checkout-page .address-section,
+  .checkout-page .goods-section,
+  .checkout-page .coupon-section,
+  .checkout-page .order-info-section,
+  .checkout-page .payment-section,
+  .checkout-page .remark-section {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* --- 地址页 --- */
+  .address-list {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  /* --- 个人中心 --- */
+  .user-header .header-bg {
+    max-width: 1200px;
+    left: 50% !important;
+    transform: translateX(-50%);
+    width: 100%;
+  }
+
+  .user-header .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .asset-section,
+  .order-section,
+  .menu-section,
+  .logout-section,
+  .profile-content,
+  .coupon-list,
+  .records-section,
+  .settings-page .section {
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .asset-section,
+  .order-section {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* --- 空状态居中 --- */
+  .van-empty {
+    max-width: 1200px;
+    margin: 40px auto;
+  }
+
+  /* --- 弹窗居中约束 --- */
+  .van-popup--bottom {
+    max-width: 1200px;
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+
+  .van-action-sheet {
+    max-width: 1200px;
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+}

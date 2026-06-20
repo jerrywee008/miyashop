@@ -1,0 +1,15 @@
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/config/CorsConfig.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/sms/GroupBuyController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/config/MybatisPlusMetaObjectHandler.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/ums/MemberController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/config/Knife4jConfig.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/oms/OrderController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/config/MybatisPlusConfig.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/config/SecurityConfig.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/sms/SeckillController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/pms/ProductController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/pms/CategoryController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/oms/CartController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/admin/AdminAuthController.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/MiyaShopApplication.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/task/GroupBuyScheduler.java
