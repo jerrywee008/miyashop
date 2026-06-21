@@ -2,13 +2,16 @@ package com.miya.web.controller.pms;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.miya.common.entity.pms.PmsProduct;
+import com.miya.common.entity.pms.PmsSku;
 import com.miya.common.result.Result;
+import com.miya.mapper.pms.PmsSkuMapper;
 import com.miya.service.pms.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -22,6 +25,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private PmsSkuMapper skuMapper;
 
     @GetMapping("/list")
     @Operation(summary = "商品列表")
@@ -42,8 +48,27 @@ public class ProductController {
 
     @PostMapping
     @Operation(summary = "新增商品")
+    @Transactional(rollbackFor = Exception.class)
     public Result<Void> add(@RequestBody PmsProduct product) {
+        // 1. 保存商品
         productService.save(product);
+
+        // 2. 自动创建默认SKU
+        PmsSku sku = new PmsSku();
+        sku.setProductId(product.getId());
+        sku.setSpuId(product.getId());
+        sku.setSpecs("{\"默认\":\"默认\"}");
+        sku.setPrice(product.getPrice());
+        sku.setOriginalPrice(product.getPrice());
+        sku.setStock(product.getStock() != null ? product.getStock() : 0);
+        sku.setSales(0);
+        if (product.getImages() != null && !product.getImages().isBlank()) {
+            String[] imgs = product.getImages().split(",");
+            sku.setImage(imgs[0].trim());
+        }
+        sku.setStatus(1);
+        skuMapper.insert(sku);
+
         return Result.success();
     }
 

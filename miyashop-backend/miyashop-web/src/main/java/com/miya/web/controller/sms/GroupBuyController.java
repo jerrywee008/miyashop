@@ -3,6 +3,7 @@ package com.miya.web.controller.sms;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.miya.common.entity.sms.SmsGroupbuyActivity;
 import com.miya.common.entity.sms.SmsGroupbuyTeam;
+import com.miya.common.entity.vo.GroupBuyActivityVO;
 import com.miya.common.result.Result;
 import com.miya.service.sms.GroupBuyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,8 +28,8 @@ public class GroupBuyController {
     private GroupBuyService groupBuyService;
 
     @GetMapping("/activities")
-    @Operation(summary = "团购活动列表")
-    public Result<Page<SmsGroupbuyActivity>> getActivities(
+    @Operation(summary = "团购活动列表（含商品信息）")
+    public Result<Page<GroupBuyActivityVO>> getActivities(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer size,
             @Parameter(description = "状态") @RequestParam(required = false) Integer status) {

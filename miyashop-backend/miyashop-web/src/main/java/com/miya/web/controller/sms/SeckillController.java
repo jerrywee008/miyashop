@@ -1,9 +1,14 @@
 package com.miya.web.controller.sms;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.miya.common.entity.pms.PmsSku;
+import com.miya.common.entity.pms.PmsProduct;
 import com.miya.common.entity.sms.SmsSeckillActivity;
 import com.miya.common.entity.sms.SmsSeckillSku;
+import com.miya.common.entity.vo.SeckillSkuVO;
 import com.miya.common.result.Result;
+import com.miya.mapper.pms.PmsProductMapper;
+import com.miya.mapper.pms.PmsSkuMapper;
 import com.miya.mapper.sms.SmsSeckillSkuMapper;
 import com.miya.service.sms.SeckillService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 秒杀控制器
@@ -29,6 +35,10 @@ public class SeckillController {
     private SeckillService seckillService;
     @Autowired
     private SmsSeckillSkuMapper seckillSkuMapper;
+    @Autowired
+    private PmsSkuMapper pmsSkuMapper;
+    @Autowired
+    private PmsProductMapper productMapper;
 
     @GetMapping("/activities")
     @Operation(summary = "秒杀活动列表")
@@ -68,13 +78,47 @@ public class SeckillController {
     }
 
     @GetMapping("/activity/{activityId}/skus")
-    @Operation(summary = "秒杀活动商品列表")
-    public Result<List<SmsSeckillSku>> getSkus(@PathVariable Long activityId) {
+    @Operation(summary = "秒杀活动商品列表（含SKU详情）")
+    public Result<List<SeckillSkuVO>> getSkus(@PathVariable Long activityId) {
         List<SmsSeckillSku> skus = seckillSkuMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SmsSeckillSku>()
                         .eq(SmsSeckillSku::getActivityId, activityId)
         );
-        return Result.success(skus);
+
+        // Collect all SKU IDs and fetch their details
+        List<Long> skuIds = skus.stream().map(SmsSeckillSku::getSkuId).collect(Collectors.toList());
+        List<PmsSku> pmsSkus = pmsSkuMapper.selectBatchIds(skuIds);
+        Map<Long, PmsSku> skuMap = pmsSkus.stream().collect(Collectors.toMap(PmsSku::getId, s -> s));
+
+        // Collect product IDs from SKUs to get product names
+        List<Long> productIds = pmsSkus.stream().map(PmsSku::getProductId).distinct().collect(Collectors.toList());
+        List<PmsProduct> products = productMapper.selectBatchIds(productIds);
+        Map<Long, PmsProduct> productMap = products.stream().collect(Collectors.toMap(PmsProduct::getId, p -> p));
+
+        // Build VO list
+        List<SeckillSkuVO> voList = skus.stream().map(sku -> {
+            SeckillSkuVO vo = new SeckillSkuVO();
+            vo.setId(sku.getId());
+            vo.setActivityId(sku.getActivityId());
+            vo.setSkuId(sku.getSkuId());
+            vo.setSeckillPrice(sku.getSeckillPrice());
+            vo.setStock(sku.getStock());
+            vo.setSold(sku.getSold() != null ? sku.getSold() : 0);
+            vo.setSort(sku.getSort());
+
+            PmsSku pmsSku = skuMap.get(sku.getSkuId());
+            if (pmsSku != null) {
+                vo.setImage(pmsSku.getImage());
+                vo.setOriginalPrice(pmsSku.getOriginalPrice());
+                PmsProduct product = productMap.get(pmsSku.getProductId());
+                if (product != null) {
+                    vo.setName(product.getName());
+                }
+            }
+            return vo;
+        }).collect(Collectors.toList());
+
+        return Result.success(voList);
     }
 
     @PostMapping("/activity/{activityId}/skus")

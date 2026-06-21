@@ -3,9 +3,14 @@ package com.miya.service.impl.sms;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.miya.common.entity.pms.PmsProduct;
+import com.miya.common.entity.pms.PmsSku;
 import com.miya.common.entity.sms.*;
+import com.miya.common.entity.vo.GroupBuyActivityVO;
 import com.miya.common.constant.ResultCode;
 import com.miya.common.exception.BusinessException;
+import com.miya.mapper.pms.PmsProductMapper;
+import com.miya.mapper.pms.PmsSkuMapper;
 import com.miya.mapper.sms.*;
 import com.miya.service.sms.GroupBuyService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 团购服务实现
@@ -30,16 +36,80 @@ public class GroupBuyServiceImpl extends ServiceImpl<SmsGroupbuyActivityMapper, 
     private SmsGroupbuyTeamMapper teamMapper;
     @Autowired
     private SmsGroupbuyMemberMapper memberMapper;
+    @Autowired
+    private PmsSkuMapper pmsSkuMapper;
+    @Autowired
+    private PmsProductMapper productMapper;
 
     @Override
-    public Page<SmsGroupbuyActivity> pageActivities(Integer page, Integer size, Integer status) {
+    public Page<GroupBuyActivityVO> pageActivities(Integer page, Integer size, Integer status) {
         LambdaQueryWrapper<SmsGroupbuyActivity> wrapper = new LambdaQueryWrapper<>();
         if (status != null) {
             wrapper.eq(SmsGroupbuyActivity::getStatus, status);
         }
         wrapper.orderByDesc(SmsGroupbuyActivity::getSort);
         wrapper.orderByDesc(SmsGroupbuyActivity::getCreatedTime);
-        return page(new Page<>(page, size), wrapper);
+        Page<SmsGroupbuyActivity> activityPage = page(new Page<>(page, size), wrapper);
+
+        // Collect SKU IDs and fetch SKU/product details
+        List<Long> skuIds = activityPage.getRecords().stream()
+                .map(SmsGroupbuyActivity::getSkuId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        final Map<Long, PmsSku> skuMap;
+        final Map<Long, PmsProduct> productMap;
+        if (!skuIds.isEmpty()) {
+            List<PmsSku> skus = pmsSkuMapper.selectBatchIds(skuIds);
+            skuMap = skus.stream().collect(Collectors.toMap(PmsSku::getId, s -> s));
+
+            List<Long> productIds = skus.stream().map(PmsSku::getProductId).distinct().collect(Collectors.toList());
+            if (!productIds.isEmpty()) {
+                List<PmsProduct> products = productMapper.selectBatchIds(productIds);
+                productMap = products.stream().collect(Collectors.toMap(PmsProduct::getId, p -> p));
+            } else {
+                productMap = Collections.emptyMap();
+            }
+        } else {
+            skuMap = Collections.emptyMap();
+            productMap = Collections.emptyMap();
+        }
+
+        // Convert to VO
+        List<GroupBuyActivityVO> voList = activityPage.getRecords().stream().map(activity -> {
+            GroupBuyActivityVO vo = new GroupBuyActivityVO();
+            // Copy all fields from parent
+            vo.setId(activity.getId());
+            vo.setName(activity.getName());
+            vo.setSkuId(activity.getSkuId());
+            vo.setOriginalPrice(activity.getOriginalPrice());
+            vo.setGroupbuyPrice(activity.getGroupbuyPrice());
+            vo.setMinPeople(activity.getMinPeople());
+            vo.setMaxPeople(activity.getMaxPeople());
+            vo.setStartTime(activity.getStartTime());
+            vo.setEndTime(activity.getEndTime());
+            vo.setValidHours(activity.getValidHours());
+            vo.setStatus(activity.getStatus());
+            vo.setSort(activity.getSort());
+            vo.setCreatedTime(activity.getCreatedTime());
+            vo.setUpdatedTime(activity.getUpdatedTime());
+
+            // Enrich with product info
+            PmsSku sku = skuMap.get(activity.getSkuId());
+            if (sku != null) {
+                vo.setProductImage(sku.getImage());
+                PmsProduct product = productMap.get(sku.getProductId());
+                if (product != null) {
+                    vo.setProductName(product.getName());
+                }
+            }
+            return vo;
+        }).collect(Collectors.toList());
+
+        Page<GroupBuyActivityVO> voPage = new Page<>(page, size, activityPage.getTotal());
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     @Override

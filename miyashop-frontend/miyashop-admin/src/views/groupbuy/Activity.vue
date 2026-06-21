@@ -260,7 +260,7 @@ const productOptions = ref<any[]>([])
 
 const fetchProductOptions = async () => {
   try {
-    const res = await getSkuList({ page: 1, size: 200, status: 1 })
+    const res = await getSkuList({ page: 1, size: 1000 })
     if (res.code === 200) {
       productOptions.value = res.data?.records || []
     }

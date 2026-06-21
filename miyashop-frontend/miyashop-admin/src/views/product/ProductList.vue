@@ -77,11 +77,11 @@
       <el-table-column label="状态" width="100" align="center">
         <template #default="{ row }">
           <el-switch
-            :model-value="row.status === 1"
+            :model-value="row.status"
             :active-value="1"
             :inactive-value="0"
             active-color="#FF6B95"
-            @change="(val: any) => handleStatusChange(row, val ? 1 : 0)"
+            @change="(val: any) => handleStatusChange(row, val)"
           />
         </template>
       </el-table-column>

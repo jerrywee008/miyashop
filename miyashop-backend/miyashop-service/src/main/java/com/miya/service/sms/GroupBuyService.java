@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.miya.common.entity.sms.SmsGroupbuyActivity;
 import com.miya.common.entity.sms.SmsGroupbuyTeam;
+import com.miya.common.entity.vo.GroupBuyActivityVO;
 
 import java.util.Map;
 
@@ -13,9 +14,9 @@ import java.util.Map;
 public interface GroupBuyService extends IService<SmsGroupbuyActivity> {
 
     /**
-     * 获取团购活动列表
+     * 获取团购活动列表（含商品信息）
      */
-    Page<SmsGroupbuyActivity> pageActivities(Integer page, Integer size, Integer status);
+    Page<GroupBuyActivityVO> pageActivities(Integer page, Integer size, Integer status);
 
     /**
      * 创建团购队伍
