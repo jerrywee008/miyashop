@@ -11,14 +11,14 @@ s3:
   secret_key: 
   use_ssl: false
   public_url: ""         # CDN/public base URL; if empty, images served through Go server
-  path_style: true       # true for MinIO (path-style addressing), false for AWS (virtual-hosted)
+  path_style: false      # true for MinIO (path-style addressing), false for AWS/COS (virtual-hosted style)
 
 jwt:
   secret: miyashop-secret-key-2024-very-long-and-secure-key-for-jwt-token-generation
   expiration: 86400      # seconds (24 hours)
 
 image:
-  max_file_size: 10485760    # 10 MB
+  max_file_size: 52428800    # 50 MB
   allowed_types:
     - image/jpeg
     - image/png

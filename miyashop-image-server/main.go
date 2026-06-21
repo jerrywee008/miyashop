@@ -106,16 +106,9 @@ func main() {
 	router.GET("/api/images/thumb/:size/*key", h.GetThumbnail)
 	router.GET("/api/images/:prefix/*key", h.Download)
 
-	// --- Authenticated routes (admin only) ---
-	authGroup := router.Group("/api/images")
-	authGroup.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
-	{
-		// Batch upload
-		authGroup.POST("/upload", middleware.AdminMiddleware(), h.Upload)
-
-		// Delete
-		authGroup.DELETE("/*key", middleware.AdminMiddleware(), h.Delete)
-	}
+	// --- Upload & Delete routes (public, no JWT auth) ---
+	router.POST("/api/images/upload", h.Upload)
+	router.DELETE("/api/images/*key", h.Delete)
 
 	// Create HTTP server
 	srv := &http.Server{

@@ -45,13 +45,20 @@ type S3Client struct {
 
 // New creates a new S3-compatible storage client.
 func New(cfg *appconfig.S3Config) (*S3Client, error) {
-	// Determine the endpoint URL
+	// Build the endpoint URL, handling the case where the config already includes a scheme.
 	endpoint := cfg.Endpoint
-	if cfg.UseSSL {
-		endpoint = "https://" + endpoint
-	} else {
-		endpoint = "http://" + endpoint
+	hasScheme := len(endpoint) >= 7 && (endpoint[:7] == "http://" || endpoint[:8] == "https://")
+	if !hasScheme {
+		if cfg.UseSSL {
+			endpoint = "https://" + endpoint
+		} else {
+			endpoint = "http://" + endpoint
+		}
+	} else if !cfg.UseSSL {
+		// Config endpoint has https:// but use_ssl is false — strip and downgrade.
+		endpoint = "http://" + endpoint[8:]
 	}
+	// Note: if the endpoint already has a scheme and use_ssl is true, use it as-is.
 
 	// Build the resolver function based on the provider
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
@@ -59,7 +66,7 @@ func New(cfg *appconfig.S3Config) (*S3Client, error) {
 			PartitionID:       "aws",
 			URL:               endpoint,
 			SigningRegion:     cfg.Region,
-			HostnameImmutable: true,
+			HostnameImmutable: false, // allow virtual-hosted style (bucket.endpoint) for COS/AWS
 		}, nil
 	})
 

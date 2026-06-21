@@ -151,13 +151,11 @@
             </div>
             <el-upload
               v-if="imageList.length < 9"
-              :action="uploadUrl"
-              :headers="uploadHeaders"
+              action="/api/images/upload"
+              name="files"
               :show-file-list="false"
-              :before-upload="beforeImageUpload"
               :on-success="onImageUploadSuccess"
-              :on-error="onImageUploadError"
-              accept="image/jpeg,image/png,image/webp,image/gif"
+              :on-error="() => ElMessage.error('上传失败')"
             >
               <div class="upload-trigger">
                 <el-icon><Plus /></el-icon>
@@ -222,12 +220,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getProductList, getProductDetail, addProduct, updateProduct, deleteProduct, updateProductStatus } from '@/api/product'
 import { getCategoryTree } from '@/api/category'
-import { uploadImage } from '@/api/upload'
 
 // ---------- 搜索 ----------
 const searchForm = reactive({
@@ -339,27 +336,9 @@ const formRules: FormRules = {
 
 // ── 图片上传 ──
 const imageList = ref<string[]>([])
-const uploadUrl = '/api/images/upload'
-const uploadHeaders = computed(() => ({
-  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
-}))
 
 const syncImagesToForm = () => {
   formData.images = imageList.value.filter(Boolean).join(',')
-}
-
-const beforeImageUpload = (file: File) => {
-  const isValidType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)
-  if (!isValidType) {
-    ElMessage.error('仅支持 JPG / PNG / WebP / GIF 格式')
-    return false
-  }
-  const isLt10M = file.size / 1024 / 1024 < 10
-  if (!isLt10M) {
-    ElMessage.error('图片大小不能超过 10MB')
-    return false
-  }
-  return true
 }
 
 const onImageUploadSuccess = (res: any) => {
@@ -372,10 +351,6 @@ const onImageUploadSuccess = (res: any) => {
   } else {
     ElMessage.error(res.message || '上传失败')
   }
-}
-
-const onImageUploadError = () => {
-  ElMessage.error('上传失败，请稍后重试')
 }
 
 const removeImage = (idx: number) => {
