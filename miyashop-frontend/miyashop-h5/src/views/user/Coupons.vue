@@ -55,6 +55,7 @@ const goBack = () => { window.location.hash = '#/user' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
+import { getCouponList } from '@/api/member'
 
 const router = useRouter()
 
@@ -76,30 +77,13 @@ const useCoupon = (coupon: any) => {
   showToast(`满${coupon.minAmount}元可用`)
 }
 
-onMounted(() => {
-  // Mock data
-  coupons.value = [
-    {
-      id: 1, name: '新人专享券', type: 1, amount: 20, minAmount: 200,
-      scope: '全场通用', startTime: '2024-06-01', endTime: '2024-12-31', status: 0
-    },
-    {
-      id: 2, name: '会员日满减券', type: 1, amount: 50, minAmount: 500,
-      scope: '女装、首饰可用', startTime: '2024-06-15', endTime: '2024-07-15', status: 0
-    },
-    {
-      id: 3, name: '618折扣券', type: 2, discount: 85, minAmount: 300,
-      scope: '全场通用', startTime: '2024-06-18', endTime: '2024-06-25', status: 0
-    },
-    {
-      id: 4, name: '满200减30', type: 1, amount: 30, minAmount: 200,
-      scope: '彩妆专场', startTime: '2024-05-01', endTime: '2024-05-31', status: 1
-    },
-    {
-      id: 5, name: '限时满减券', type: 1, amount: 100, minAmount: 800,
-      scope: '全场通用', startTime: '2024-03-01', endTime: '2024-04-30', status: 2
+onMounted(async () => {
+  try {
+    const res: any = await getCouponList()
+    if (res?.code === 200 && res.data) {
+      coupons.value = (res.data.records || res.data).map((c: any) => ({ ...c }))
     }
-  ]
+  } catch { /* ignore */ }
 })
 </script>
 

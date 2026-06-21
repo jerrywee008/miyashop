@@ -17,7 +17,7 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="全部" :value="undefined" />
+            <el-option label="全部" :value="('' as any)" />
             <el-option label="上架" :value="1" />
             <el-option label="下架" :value="0" />
           </el-select>
@@ -81,7 +81,7 @@
             :active-value="1"
             :inactive-value="0"
             active-color="#FF6B95"
-            @change="(val: boolean) => handleStatusChange(row, val ? 1 : 0)"
+            @change="(val: any) => handleStatusChange(row, val ? 1 : 0)"
           />
         </template>
       </el-table-column>

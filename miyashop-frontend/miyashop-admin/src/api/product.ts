@@ -7,32 +7,32 @@ export function getProductList(params: {
   name?: string
   categoryId?: number
   status?: number
-}) {
+}): Promise<any> {
   return request.get('/product/list', { params })
 }
 
 // 商品详情
-export function getProductDetail(id: number) {
+export function getProductDetail(id: number): Promise<any> {
   return request.get(`/product/${id}`)
 }
 
 // 新增商品
-export function addProduct(data: any) {
+export function addProduct(data: any): Promise<any> {
   return request.post('/product', data)
 }
 
 // 修改商品
-export function updateProduct(id: number, data: any) {
+export function updateProduct(id: number, data: any): Promise<any> {
   return request.put(`/product/${id}`, data)
 }
 
 // 删除商品
-export function deleteProduct(id: number) {
+export function deleteProduct(id: number): Promise<any> {
   return request.delete(`/product/${id}`)
 }
 
 // 商品上下架
-export function updateProductStatus(id: number, status: number) {
+export function updateProductStatus(id: number, status: number): Promise<any> {
   return request.put(`/product/${id}/status`, null, { params: { status } })
 }
 
@@ -42,6 +42,6 @@ export function getSkuList(params?: {
   size?: number
   productId?: number
   status?: number
-}) {
+}): Promise<any> {
   return request.get('/sku/list', { params })
 }

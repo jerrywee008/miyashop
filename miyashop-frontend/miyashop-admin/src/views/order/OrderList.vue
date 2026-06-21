@@ -8,7 +8,7 @@
         </el-form-item>
         <el-form-item label="订单状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="全部" :value="undefined" />
+            <el-option label="全部" :value="('' as any)" />
             <el-option label="待支付" :value="0" />
             <el-option label="待发货" :value="1" />
             <el-option label="待收货" :value="2" />
@@ -86,7 +86,7 @@
       </el-table-column>
       <el-table-column label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)" size="small">
+          <el-tag :type="(getStatusType(row.status) as 'info' | 'success' | 'warning' | 'danger')" size="small">
             {{ getStatusText(row.status) }}
           </el-tag>
         </template>
@@ -149,7 +149,7 @@
       <el-descriptions :column="2" border v-if="detailData">
         <el-descriptions-item label="订单号" :span="2">{{ detailData.orderNo }}</el-descriptions-item>
         <el-descriptions-item label="订单状态">
-          <el-tag :type="getStatusType(detailData.status)">{{ getStatusText(detailData.status) }}</el-tag>
+          <el-tag :type="(getStatusType(detailData.status) as 'info' | 'success' | 'warning' | 'danger')">{{ getStatusText(detailData.status) }}</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="支付方式">
           {{ detailData.payType === 1 ? '微信支付' : detailData.payType === 2 ? '支付宝' : '未支付' }}
@@ -258,19 +258,6 @@ const fetchData = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const updateStats = () => {
-  const stats: Record<number, number> = {}
-  tableData.value.forEach(o => {
-    stats[o.status] = (stats[o.status] || 0) + 1
-  })
-  orderStats.value[0].value = stats[0] || 0
-  orderStats.value[1].value = stats[1] || 0
-  orderStats.value[2].value = stats[2] || 0
-  orderStats.value[3].value = stats[3] || 0
-  orderStats.value[4].value = stats[4] || 0
-  orderStats.value[5].value = stats[5] || 0
 }
 
 const handleSearch = () => { pagination.page = 1; fetchData() }

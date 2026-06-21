@@ -51,7 +51,7 @@
             <div class="node-info">
               <span class="node-name">{{ data.name }}</span>
               <span class="node-meta">
-                <el-tag :type="getLevelType(data.level)" size="small">
+                <el-tag :type="(getLevelType(data.level) as 'info' | 'success' | 'warning' | 'danger')" size="small">
                   {{ getLevelLabel(data.level) }}
                 </el-tag>
                 <span class="node-sort">排序: {{ data.sort }}</span>
@@ -66,7 +66,7 @@
                 active-color="#FF6B95"
                 size="small"
                 @click.stop
-                @change="(val: boolean) => handleStatusChange(data, val ? 1 : 0)"
+                @change="(val: any) => handleStatusChange(data, val ? 1 : 0)"
               />
               <el-button size="small" type="primary" link @click.stop="handleEdit(data)">
                 编辑
@@ -109,7 +109,7 @@
           <el-input :value="parentName" disabled />
         </el-form-item>
         <el-form-item label="分类层级">
-          <el-tag :type="getLevelType(formData.level)">{{ getLevelLabel(formData.level) }}</el-tag>
+          <el-tag :type="(getLevelType(formData.level) as 'info' | 'success' | 'warning' | 'danger')">{{ getLevelLabel(formData.level) }}</el-tag>
         </el-form-item>
         <el-form-item label="分类名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入分类名称" />

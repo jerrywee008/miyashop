@@ -8,7 +8,7 @@
     <div class="body">
       <div class="logo">🌸 MiyaShop</div>
       <div class="info">当前路由: {{ path }}</div>
-      <button class="btn" @click="doLogin">登录（Mock）</button>
+      <button class="btn" @click="doLogin">登录</button>
       <div v-if="msg" class="msg">{{ msg }}</div>
       <button class="btn" style="background:#333;margin-top:12px" @click="goBack">返回首页</button>
     </div>
@@ -18,13 +18,31 @@
 <script setup lang="ts">
 defineOptions({ name: 'LoginPage' })
 import { ref } from 'vue'
+import { login } from '@/api/member'
 
 const path = ref(window.location.hash || '?')
 const msg = ref('')
 
-const doLogin = () => {
-  msg.value = '登录成功'
-  setTimeout(() => { window.location.hash = '#/' }, 1000)
+const username = ref('')
+const password = ref('')
+
+const doLogin = async () => {
+  try {
+    const res: any = await login({ mobile: username.value || '13800000000', password: password.value || '123456' })
+    if (res?.code === 200 && res.data) {
+      // Store token
+      localStorage.setItem('token', res.data.token || res.data.accessToken || '')
+      if (res.data.userInfo) {
+        localStorage.setItem('userInfo', JSON.stringify(res.data.userInfo))
+      }
+      msg.value = '登录成功'
+      setTimeout(() => { window.location.hash = '#/' }, 500)
+    } else {
+      msg.value = res?.message || '登录失败'
+    }
+  } catch {
+    msg.value = '登录失败，请稍后重试'
+  }
 }
 const goBack = () => { window.location.hash = '#/' }
 </script>

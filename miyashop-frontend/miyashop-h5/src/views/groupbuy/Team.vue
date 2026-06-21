@@ -160,38 +160,18 @@
 <script setup lang="ts">
 const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { showToast } from 'vant'
+import { getTeamDetail, joinTeam } from '@/api/groupbuy'
 
-const router = useRouter()
 const route = useRoute()
-
 const joining = ref(false)
-const countdownMs = ref(5 * 60 * 60 * 1000) // 5 hours
+const loading = ref(false)
+const countdownMs = ref(5 * 60 * 60 * 1000)
 
-const team = ref<any>({
-  id: 1,
-  teamId: 'GB001',
-  productName: '优雅碎花连衣裙',
-  productImage: 'https://via.placeholder.com/300/FF6B95/FFFFFF?text=Team1',
-  groupbuyPrice: 199,
-  originalPrice: 399,
-  minPeople: 3,
-  maxPeople: 5,
-  currentPeople: 2,
-  status: 0, // 0-待成团 1-进行中 2-成功 3-失败
-  expireTime: 5 * 60 * 60 * 1000,
-  leaderId: 1,
-  members: [
-    { id: 1, nickname: '小美', avatar: 'https://via.placeholder.com/50/FF6B95/FFFFFF?text=L', joinTime: '2024-06-03 10:30', isLeader: true },
-    { id: 2, nickname: '丽丽', avatar: 'https://via.placeholder.com/50/FFB6C1/FFFFFF?text=M2', joinTime: '2024-06-03 14:20', isLeader: false }
-  ]
-})
-
-const otherTeams = ref([
-  { id: 2, teamId: 'GB002', leaderName: '芳芳', leaderAvatar: 'https://via.placeholder.com/30/FFC0CB/FFFFFF', currentPeople: 2, minPeople: 3, progress: 66 },
-  { id: 3, teamId: 'GB003', leaderName: '小红', leaderAvatar: 'https://via.placeholder.com/30/FF69B4/FFFFFF', currentPeople: 1, minPeople: 3, progress: 33 }
-])
+const defaultImg = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" fill="%23f0f0f0"><rect width="300" height="300"/><text x="150" y="160" text-anchor="middle" fill="%23ccc" font-size="16">暂无图片</text></svg>'
+const team = ref<any>({})
+const otherTeams = ref<any[]>([])
 
 const teamProgress = computed(() => {
   return Math.round(team.value.currentPeople / team.value.minPeople * 100)
@@ -231,35 +211,38 @@ const onShareSelect = () => {
 }
 
 const handleJoin = async () => {
+  if (!team.value.id) return
   joining.value = true
-  setTimeout(() => {
-    joining.value = false
-    showToast('已加入拼团')
-
-    // Update team state
-    team.value.currentPeople++
-    team.value.members.push({
-      id: Date.now(),
-      nickname: '我',
-      avatar: 'https://via.placeholder.com/50/FF6B95/FFFFFF?text=ME',
-      joinTime: new Date().toLocaleString(),
-      isLeader: false
-    })
-
-    if (team.value.currentPeople >= team.value.minPeople) {
-      team.value.status = 2
+  try {
+    const res = await joinTeam(team.value.id)
+    if (res.code === 200) {
+      showToast('已加入拼团')
+      fetchTeam()
+    } else {
+      showToast(res.message || '参团失败')
     }
-  }, 800)
+  } catch {
+    showToast('参团失败，请稍后重试')
+  } finally {
+    joining.value = false
+  }
 }
 
-onMounted(async () => {
+const fetchTeam = async () => {
   const teamId = route.params.id
+  if (!teamId) return
+  loading.value = true
   try {
-    const res = await fetch(`/api/groupbuy/team/${teamId}`).then(r => r.json())
+    const res = await getTeamDetail(teamId as string)
     if (res.code === 200 && res.data) {
       team.value = res.data
     }
-  } catch { /* use mock */ }
+  } catch { /* ignore */ }
+  finally { loading.value = false }
+}
+
+onMounted(() => {
+  fetchTeam()
 })
 </script>
 

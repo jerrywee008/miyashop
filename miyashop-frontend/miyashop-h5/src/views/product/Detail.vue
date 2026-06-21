@@ -231,6 +231,8 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/store/user'
+import { getProductDetail, getProductReviews } from '@/api/product'
+import { addToCart as addCartApi } from '@/api/cart'
 
 const router = useRouter()
 const route = useRoute()
@@ -240,35 +242,10 @@ const productId = computed(() => route.params.id as string)
 const cartCount = computed(() => userStore.cartCount)
 
 // ---------- 商品数据 ----------
-const product = ref<any>({
-  id: 1,
-  name: '优雅碎花连衣裙 夏季新款 法式复古',
-  price: 299,
-  originalPrice: 599,
-  sales: 1256,
-  score: 4.8,
-  reviewCount: 89,
-  detail: '<p>面料：100%纯棉</p><p>尺码：S/M/L/XL</p><p>风格：法式复古</p>',
-  skus: [
-    { id: 1, specs: '红色 S', price: 299, originalPrice: 599, stock: 50, image: 'https://via.placeholder.com/200/FF6B95/FFFFFF?text=S-Red' },
-    { id: 2, specs: '红色 M', price: 299, originalPrice: 599, stock: 30, image: 'https://via.placeholder.com/200/FF6B95/FFFFFF?text=M-Red' },
-    { id: 3, specs: '蓝色 S', price: 319, originalPrice: 629, stock: 0, image: 'https://via.placeholder.com/200/4477FF/FFFFFF?text=S-Blue' },
-    { id: 4, specs: '蓝色 M', price: 319, originalPrice: 629, stock: 20, image: 'https://via.placeholder.com/200/4477FF/FFFFFF?text=M-Blue' },
-    { id: 5, specs: '白色 L', price: 279, originalPrice: 559, stock: 15, image: 'https://via.placeholder.com/200/FFFFFF/999999?text=L-White' }
-  ]
-})
-
-const productImages = ref([
-  'https://via.placeholder.com/750x750/FF6B95/FFFFFF?text=Product+1',
-  'https://via.placeholder.com/750x750/FFB6C1/FFFFFF?text=Product+2',
-  'https://via.placeholder.com/750x750/FFC0CB/FFFFFF?text=Product+3',
-  'https://via.placeholder.com/750x750/FF69B4/FFFFFF?text=Product+4'
-])
-
-const detailImages = ref([
-  'https://via.placeholder.com/750x1000/FFF0F3/FF6B95?text=Detail+1',
-  'https://via.placeholder.com/750x1000/FFF0F3/FF6B95?text=Detail+2'
-])
+const product = ref<any>({})
+const productImages = ref<string[]>([])
+const detailImages = ref<string[]>([])
+const loading = ref(false)
 
 const currentImage = ref(0)
 
@@ -318,27 +295,9 @@ const selectSku = (sku: any) => {
 }
 
 // ---------- 促销 ----------
-const promotions = ref([
-  { tag: '满减', text: '满300减50' },
-  { tag: '新人', text: '新用户首单95折' },
-  { tag: '优惠券', text: '可领取满200减20优惠券' }
-])
-
+const promotions = ref<any[]>([])
 // ---------- 评价 ----------
-const reviews = ref([
-  {
-    id: 1, nickname: '小美', avatar: 'https://via.placeholder.com/32/FF6B95/FFFFFF?text=M',
-    score: 5, content: '裙子很漂亮，面料舒适，穿着很显气质，超级喜欢！',
-    skuSpecs: '红色 S', images: 'https://via.placeholder.com/80/FF6B95/FFFFFF,https://via.placeholder.com/80/FFB6C1/FFFFFF',
-    createdTime: '2024-06-02'
-  },
-  {
-    id: 2, nickname: '丽丽', avatar: 'https://via.placeholder.com/32/FFB6C1/FFFFFF?text=L',
-    score: 4, content: '质量不错，颜色比图片稍微深一点点，整体满意。',
-    skuSpecs: '蓝色 M', images: '',
-    createdTime: '2024-06-01'
-  }
-])
+const reviews = ref<any[]>([])
 
 const viewAllReviews = () => {
   showToast('查看全部评价')
@@ -378,9 +337,17 @@ const confirmSkuSheet = () => {
   }
 }
 
-const doAddToCart = () => {
-  showToast('已加入购物车')
-  userStore.setCartCount((userStore.cartCount || 0) + quantity.value)
+const doAddToCart = async () => {
+  if (!selectedSkuId.value) return
+  try {
+    const res = await addCartApi({ skuId: selectedSkuId.value, quantity: quantity.value })
+    if (res.code === 200) {
+      showToast('已加入购物车')
+      userStore.setCartCount((userStore.cartCount || 0) + quantity.value)
+    }
+  } catch {
+    showToast('加入购物车失败')
+  }
 }
 
 const doBuyNow = () => {
@@ -424,15 +391,28 @@ const onShareSelect = () => {
 
 // ---------- 加载数据 ----------
 onMounted(async () => {
+  loading.value = true
   try {
-    const res = await fetch(`/api/product/${productId.value}`)
-      .then(r => r.json())
+    const res = await getProductDetail(productId.value)
     if (res.code === 200 && res.data) {
       product.value = res.data
+      // Parse images
+      if (res.data.images) {
+        productImages.value = res.data.images.split(',').filter(Boolean)
+      }
+      // Parse SKUs
+      const skus = res.data.skus || res.data.skuList || []
+      if (skus.length > 0) product.value.skus = skus
+      // Try to load reviews
+      try {
+        const reviewRes = await getProductReviews(res.data.id, { page: 1, size: 5 })
+        if (reviewRes.code === 200) {
+          reviews.value = reviewRes.data?.records || reviewRes.data || []
+        }
+      } catch { /* ignore */ }
     }
-  } catch {
-    // Use mock data
-  }
+  } catch { /* ignore */ }
+  finally { loading.value = false }
   // 默认选中第一个有库存的SKU
   const firstAvailable = (product.value.skus || []).find((s: any) => s.stock > 0)
   if (firstAvailable) {

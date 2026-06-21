@@ -79,9 +79,10 @@
 
 <script setup lang="ts">
 const goBack = () => { window.location.hash = '#/' }
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'
+import { getOrderList, cancelOrder, confirmOrder } from '@/api/order'
 
 const router = useRouter()
 
@@ -147,6 +148,7 @@ const handleAction = async (order: any, action: string) => {
     case 'cancel':
       try {
         await showConfirmDialog({ title: '提示', message: '确定取消该订单吗？' })
+        await cancelOrder(order.id)
         order.status = 4
         showSuccessToast('订单已取消')
       } catch { /* canceled */ }
@@ -160,6 +162,7 @@ const handleAction = async (order: any, action: string) => {
     case 'confirm':
       try {
         await showConfirmDialog({ title: '提示', message: '确定已收到商品吗？' })
+        await confirmOrder(order.id)
         order.status = 3
         showSuccessToast('已确认收货')
       } catch { /* canceled */ }
@@ -177,55 +180,52 @@ const handleAction = async (order: any, action: string) => {
 }
 
 // ---------- 加载数据 ----------
+const fetchOrderList = async () => {
+  try {
+    const params: any = { page, size: 10 }
+    if (activeTab.value >= 0) {
+      params.status = activeTab.value
+    }
+    const res: any = await getOrderList(params)
+    if (res?.code === 200 && res.data) {
+      const records = res.data.records || res.data
+      if (page === 1) {
+        orderList.value = records
+      } else {
+        orderList.value = [...orderList.value, ...records]
+      }
+      finished.value = !records || records.length < 10
+      page++
+    } else {
+      finished.value = true
+    }
+  } catch {
+    finished.value = true
+  } finally {
+    loading.value = false
+    refreshing.value = false
+  }
+}
+
 const onLoad = () => {
   loading.value = true
-  // Mock data
-  setTimeout(() => {
-    const mockOrders = [
-      {
-        id: 1, orderNo: 'ORD202406030001',
-        totalAmount: 598, payAmount: 548, discountAmount: 50, freight: 0, status: 1, payType: 1,
-        orderItems: [
-          { id: 1, productId: 1, productName: '优雅碎花连衣裙', skuSpecs: '红色 S', price: 299, quantity: 2, skuImage: 'https://via.placeholder.com/60/FF6B95/FFFFFF' }
-        ],
-        createdTime: '2024-06-03 10:30:00'
-      },
-      {
-        id: 2, orderNo: 'ORD202406020002',
-        totalAmount: 358, payAmount: 338, discountAmount: 20, freight: 0, status: 2, payType: 2,
-        orderItems: [
-          { id: 2, productId: 2, productName: '时尚纯棉衬衫', skuSpecs: '白色 M', price: 199, quantity: 1, skuImage: 'https://via.placeholder.com/60/FFB6C1/FFFFFF' },
-          { id: 3, productId: 3, productName: '精致项链套装', skuSpecs: '金色', price: 159, quantity: 1, skuImage: 'https://via.placeholder.com/60/FFC0CB/FFFFFF' }
-        ],
-        createdTime: '2024-06-02 14:20:00'
-      },
-      {
-        id: 3, orderNo: 'ORD202605280003',
-        totalAmount: 299, payAmount: 269, discountAmount: 30, freight: 0, status: 3, payType: 1,
-        orderItems: [
-          { id: 4, productId: 5, productName: '口红礼盒 6支装', price: 299, quantity: 1, skuImage: 'https://via.placeholder.com/60/FF69B4/FFFFFF' }
-        ],
-        createdTime: '2024-05-28 09:00:00'
-      }
-    ]
-    if (page === 1) {
-      orderList.value = mockOrders
-    }
-    loading.value = false
-    finished.value = true
-    page++
-  }, 500)
+  fetchOrderList()
 }
 
 const onRefresh = () => {
   page = 1
   finished.value = false
-  orderList.value = []
-  setTimeout(() => {
-    refreshing.value = false
-    onLoad()
-  }, 500)
+  refreshing.value = true
+  fetchOrderList()
 }
+
+// Watch tab change to reload
+watch(activeTab, () => {
+  page = 1
+  finished.value = false
+  orderList.value = []
+  onLoad()
+})
 
 onMounted(() => {
   onLoad()

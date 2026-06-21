@@ -87,7 +87,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const userStore = useUserStore()
 
-const cacheSize = ref('2.3MB')
+const cacheSize = ref('0MB')
 const showAboutDialog = ref(false)
 
 const settings = reactive({

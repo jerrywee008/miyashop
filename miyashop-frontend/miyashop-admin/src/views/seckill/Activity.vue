@@ -28,7 +28,7 @@
       </el-table-column>
       <el-table-column label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)" size="small">
+          <el-tag :type="(getStatusType(row.status) as 'info' | 'success' | 'warning' | 'danger')" size="small">
             {{ getStatusText(row.status) }}
           </el-tag>
         </template>
@@ -103,7 +103,7 @@
           <el-option
             v-for="sku in availableSkus"
             :key="sku.id"
-            :label="`${sku.name} - ¥${sku.price} (库存:${sku.stock})`"
+            :label="`${sku.name} - ¥${sku.price} (库存:${sku.stock}) [${sku.status === 1 ? '上架' : '下架'}]`"
             :value="sku.id"
           />
         </el-select>
@@ -311,7 +311,7 @@ const availableSkus = ref<any[]>([])
 
 const fetchAvailableSkus = async () => {
   try {
-    const res = await getSkuList({ page: 1, size: 200, status: 1 })
+    const res = await getSkuList({ page: 1, size: 1000 })
     if (res.code === 200) {
       availableSkus.value = res.data?.records || []
     }
@@ -337,7 +337,7 @@ const handleManageSkus = async (row: any) => {
   skuVisible.value = true
 }
 
-const addSkuToActivity = () => {
+const addSkuToActivity = async () => {
   if (!selectedSkuId.value) {
     ElMessage.warning('请选择商品SKU')
     return
@@ -352,22 +352,35 @@ const addSkuToActivity = () => {
     ElMessage.warning('该商品已添加')
     return
   }
-  activitySkus.value.push({
-    id: Date.now(),
-    skuId: sku.id,
-    name: sku.name,
-    originalPrice: sku.price,
-    seckillPrice: skuPrice.value,
-    stock: skuStock.value,
-    sold: 0,
-    image: sku.image || ''
-  })
-  ElMessage.success('添加成功')
+  try {
+    const res = await addSeckillSku(currentActivityId.value!, {
+      skuId: sku.id,
+      seckillPrice: skuPrice.value,
+      stock: skuStock.value
+    })
+    if (res.code === 200) {
+      // Refresh the list from backend to get the real ID
+      const refreshRes = await getSeckillSkus(currentActivityId.value!)
+      if (refreshRes.code === 200) {
+        activitySkus.value = refreshRes.data || []
+      }
+      ElMessage.success('添加成功')
+    }
+  } catch {
+    ElMessage.error('添加失败')
+  }
 }
 
-const removeSku = (row: any) => {
-  activitySkus.value = activitySkus.value.filter(s => s.id !== row.id)
-  ElMessage.success('已移除')
+const removeSku = async (row: any) => {
+  try {
+    const res = await deleteSeckillSku(currentActivityId.value!, row.skuId)
+    if (res.code === 200) {
+      activitySkus.value = activitySkus.value.filter(s => s.skuId !== row.skuId)
+      ElMessage.success('已移除')
+    }
+  } catch {
+    ElMessage.error('移除失败')
+  }
 }
 
 // ---------- 页面加载 ----------

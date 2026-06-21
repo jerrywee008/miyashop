@@ -111,7 +111,8 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'AddressPage' })
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { getAddressList } from '@/api/member'
 
 const toast = ref('')
 const showMsg = (m: string) => { toast.value = m; setTimeout(() => toast.value = '', 2000) }
@@ -121,10 +122,7 @@ let confirmCb: (() => void) | null = null
 const showConfirm = (m: string, cb: () => void) => { confirmMsg.value = m; confirmCb = cb }
 const onConfirm = () => { confirmCb?.(); confirmMsg.value = '' }
 
-const list = ref<any[]>([
-  { id: 1, name: '小美', phone: '138****0001', province: '广东省', city: '广州市', district: '天河区', detail: '珠江新城街道100号', isDefault: true },
-  { id: 2, name: '丽丽', phone: '139****0002', province: '广东省', city: '深圳市', district: '南山区', detail: '科技园路50号', isDefault: false }
-])
+const list = ref<any[]>([])
 
 const setDefault = (addr: any) => {
   list.value.forEach(a => a.isDefault = a.id === addr.id)
@@ -219,6 +217,19 @@ const confirmRegion = () => {
   form.district = selDistrict.value
   showRegion.value = false
 }
+
+const fetchAddressList = async () => {
+  try {
+    const res: any = await getAddressList()
+    if (res?.code === 200 && res.data) {
+      list.value = (res.data.records || res.data).map((a: any) => ({ ...a }))
+    }
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  fetchAddressList()
+})
 
 const goBack = () => { window.location.hash = '#/user' }
 </script>

@@ -7,9 +7,7 @@ version: "3.8"
 services:
   # ---------- Spring Boot 后端 ----------
   backend:
-    build:
-      context: ./miyashop-backend
-      dockerfile: Dockerfile
+    image: miyashop-backend
     container_name: miyashop-backend
     restart: unless-stopped
     ports:
@@ -20,25 +18,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: miya-2022
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      # 覆盖 RabbitMQ（无 RabbitMQ 时不阻塞）
       SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
       TZ: Asia/Shanghai
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
   # ---------- Go 图片服务器 ----------
   image-server:
-    build:
-      context: ./miyashop-image-server
-      dockerfile: Dockerfile
-      args:
-        # 镜像拉取由 ~/.docker/daemon.json 的 registry-mirrors 统一代理
-        GOLANG_IMAGE: ${GOLANG_IMAGE:-golang:1.22-alpine}
-        ALPINE_IMAGE: ${ALPINE_IMAGE:-alpine:3.20}
-        APK_MIRROR: ${APK_MIRROR:-mirrors.aliyun.com}
+    image: miyashop-image-server
     container_name: miyashop-image-server
     restart: unless-stopped
     ports:
@@ -72,9 +57,7 @@ services:
 
   # ---------- 后台管理系统 ----------
   admin:
-    build:
-      context: ./miyashop-frontend/miyashop-admin
-      dockerfile: Dockerfile
+    image: miyashop-admin
     container_name: miyashop-admin
     restart: unless-stopped
     ports:

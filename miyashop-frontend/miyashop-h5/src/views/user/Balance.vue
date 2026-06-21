@@ -52,12 +52,7 @@ import { useUserStore } from '@/store/user'
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 
-const records = ref([
-  { id: 1, desc: '订单退款', time: '2024-06-15 14:30', type: 'income', amount: 50 },
-  { id: 2, desc: '购买商品', time: '2024-06-10 09:15', type: 'expense', amount: 299 },
-  { id: 3, desc: '活动返现', time: '2024-06-05 16:00', type: 'income', amount: 20 },
-  { id: 4, desc: '购买商品', time: '2024-05-28 11:20', type: 'expense', amount: 159 }
-])
+const records = ref<any[]>([])
 </script>
 
 <style scoped>

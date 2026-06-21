@@ -166,6 +166,9 @@ const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showSuccessToast } from 'vant'
+import { getAddressList } from '@/api/member'
+import { getCouponList } from '@/api/member'
+import { createOrder } from '@/api/order'
 
 const router = useRouter()
 
@@ -206,11 +209,7 @@ const selectedCoupon = computed(() => {
   return availableCoupons.value.find(c => c.id === selectedCouponId.value)
 })
 
-const availableCoupons = ref([
-  { id: 1, name: '新人专享券', amount: 20, minAmount: 200, expireTime: '2024-12-31' },
-  { id: 2, name: '满减优惠券', amount: 30, minAmount: 300, expireTime: '2024-12-31' },
-  { id: 3, name: '会员专属券', amount: 50, minAmount: 500, expireTime: '2024-12-31' }
-])
+const availableCoupons = ref<any[]>([])
 
 const selectCoupon = (coupon: any) => {
   if (goodsTotal.value < coupon.minAmount) {
@@ -242,53 +241,33 @@ const handleSubmitOrder = async () => {
     const addr = selectedAddress.value
     const orderData = {
       addressId: addr.id,
-      // Fallback: 传递完整地址，防止数据库查不到地址
-      address: {
-        name: addr.name,
-        phone: addr.phone,
-        fullAddress: (addr.province || '') + (addr.city || '') + (addr.district || '') + ' ' + (addr.detail || '')
-      },
       items: orderItems.value.map(i => ({
         skuId: i.skuId,
         productId: i.productId,
-        quantity: i.quantity,
-        // Fallback: 完整商品信息，防止数据库查不到 SKU
-        name: i.name,
-        price: i.price,
-        image: i.image,
-        specs: i.specs
+        quantity: i.quantity
       })),
       payType: payType.value,
       couponId: selectedCouponId.value,
       remark: remark.value
     }
 
-    const res = await fetch('/api/order/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    }).then(r => r.json())
+    const res: any = await createOrder(orderData)
 
-    if (res.code === 200) {
+    if (res?.code === 200) {
       showSuccessToast('下单成功')
       localStorage.removeItem('checkoutItems')
       window.location.hash = `#/order/${res.data.id || res.data.orderNo}`
     } else {
-      // Mock success
-      showSuccessToast('下单成功')
-      localStorage.removeItem('checkoutItems')
-      window.location.hash = '#/order/list'
+      showToast(res?.message || '下单失败')
     }
   } catch {
-    showSuccessToast('下单成功')
-    localStorage.removeItem('checkoutItems')
-    window.location.hash = '#/order/list'
+    showToast('下单失败，请稍后重试')
   } finally {
     submitting.value = false
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 加载结算商品
   const checkoutData = localStorage.getItem('checkoutItems')
   if (checkoutData) {
@@ -296,19 +275,24 @@ onMounted(() => {
       orderItems.value = JSON.parse(checkoutData)
     } catch { /* ignore */ }
   }
-  if (orderItems.value.length === 0) {
-    // Mock data
-    orderItems.value = [
-      { skuId: 1, productId: 1, name: '优雅碎花连衣裙', specs: '红色 S', price: 299, originalPrice: 599, quantity: 1, image: 'https://via.placeholder.com/100/FF6B95/FFFFFF?text=O1' },
-      { skuId: 103, productId: 2, name: '时尚纯棉衬衫', specs: '白色 M', price: 199, originalPrice: 399, quantity: 2, image: 'https://via.placeholder.com/100/FFB6C1/FFFFFF?text=O2' }
-    ]
-  }
 
-  // 加载默认地址
-  selectedAddress.value = {
-    id: 1, name: '小美', phone: '138****0001', province: '广东省', city: '广州市', district: '天河区',
-    detail: '珠江新城街道100号', isDefault: true
-  }
+  // 加载地址列表
+  try {
+    const addrRes: any = await getAddressList()
+    if (addrRes?.code === 200 && addrRes.data) {
+      const addresses = addrRes.data.records || addrRes.data
+      // 优先选择默认地址
+      selectedAddress.value = addresses.find((a: any) => a.isDefault) || addresses[0] || null
+    }
+  } catch { /* ignore */ }
+
+  // 加载优惠券列表
+  try {
+    const couponRes: any = await getCouponList({ status: 0 })
+    if (couponRes?.code === 200 && couponRes.data) {
+      availableCoupons.value = couponRes.data.records || couponRes.data
+    }
+  } catch { /* ignore */ }
 })
 </script>
 

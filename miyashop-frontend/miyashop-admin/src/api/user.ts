@@ -7,6 +7,6 @@ export function getUserList(params?: {
   keyword?: string
   mobile?: string
   status?: number
-}) {
+}): Promise<{ code: number; data: any; message?: string }> {
   return request.get('/member/list', { params })
 }

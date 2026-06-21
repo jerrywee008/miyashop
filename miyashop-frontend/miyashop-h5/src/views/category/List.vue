@@ -5,9 +5,10 @@
       <span class="title">{{ catName }}</span>
       <span></span>
     </div>
-    <div class="list">
+    <van-loading v-if="loading" class="loading-center" />
+    <div class="list" v-else>
       <div class="card" v-for="p in items" :key="p.id" @click="goProduct(p.id)">
-        <img :src="p.image" class="img" />
+        <img :src="getImg(p)" class="img" />
         <div class="info">
           <div class="name">{{ p.name }}</div>
           <div class="price">¥{{ p.price }}</div>
@@ -19,39 +20,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { getProductList } from '@/api/product'
 
-const route = useRoute()
 const catName = ref('')
+const loading = ref(false)
+const items = ref<any[]>([])
+const defaultImg = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" fill="%23f0f0f0"><rect width="300" height="300"/><text x="150" y="160" text-anchor="middle" fill="%23ccc" font-size="16">暂无图片</text></svg>'
 
-// 从 hash 中手动解析分类名
+// 从 hash 解析分类ID或名称
 const hash = window.location.hash
 const match = hash.match(/#\/category\/(.+)/)
-catName.value = match ? decodeURIComponent(match[1]) : '分类'
+const raw = match ? decodeURIComponent(match[1]) : ''
+catName.value = raw || '分类'
 
-const products: Record<string, any[]> = {
-  '连衣裙': [
-    { id: 1, image: 'https://via.placeholder.com/300/FF6B95/fff?text=D1', name: '法式复古连衣裙', price: 299 },
-    { id: 2, image: 'https://via.placeholder.com/300/FFB6C1/fff?text=D2', name: '夏季碎花连衣裙', price: 259 },
-  ],
-  '衬衫': [
-    { id: 3, image: 'https://via.placeholder.com/300/DA70D6/fff?text=S1', name: '缎面飘带衬衫', price: 199 },
-    { id: 4, image: 'https://via.placeholder.com/300/FF69B4/fff?text=S2', name: '基础款白衬衫', price: 159 },
-  ],
-  'T恤': [{ id: 5, image: 'https://via.placeholder.com/300/FFC0CB/fff?text=T1', name: '纯棉印花T恤', price: 99 }],
-  '裤子': [{ id: 6, image: 'https://via.placeholder.com/300/FFB6C1/fff?text=P1', name: '高腰直筒西裤', price: 269 }],
-  '首饰': [{ id: 7, image: 'https://via.placeholder.com/300/DA70D6/fff?text=J1', name: '珍珠锁骨链', price: 159 }],
-  '彩妆': [{ id: 8, image: 'https://via.placeholder.com/300/FF6B95/fff?text=C1', name: '丝绒口红', price: 129 }],
-  '香水': [{ id: 9, image: 'https://via.placeholder.com/300/FFB6C1/fff?text=PF1', name: '花香淡香水', price: 299 }],
-  '更多': [{ id: 10, image: 'https://via.placeholder.com/300/FFC0CB/fff?text=M1', name: '精选好物', price: 199 }],
+const getImg = (p: any) => {
+  if (p.images) return p.images.split(',')[0]
+  return defaultImg
 }
 
-const items = ref<any[]>([])
-items.value = products[catName.value] || products['更多'] || []
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const catId = Number(raw)
+    const params: any = { page: 1, size: 20 }
+    if (!isNaN(catId)) {
+      params.categoryId = catId
+    } else if (raw) {
+      params.name = raw
+    }
+    const res = await getProductList(params)
+    if (res.code === 200) {
+      items.value = res.data?.records || []
+    }
+    // Try to get category name from first product
+    if (catName.value === '分类' && items.value.length > 0) {
+      catName.value = items.value[0].categoryName || '分类'
+    }
+  } catch { /* ignore */ }
+  finally { loading.value = false }
+}
 
 const goProduct = (id: number) => { window.location.hash = '#/product/' + id }
 const goBack = () => { window.location.hash = '#/' }
+
+onMounted(() => { fetchData() })
 </script>
 
 <style scoped>
@@ -66,4 +79,5 @@ const goBack = () => { window.location.hash = '#/' }
 .name { font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .price { color: #FF6B95; font-weight: 700; font-size: 16px; margin-top: 4px; }
 .empty { width: 100%; text-align: center; padding: 60px 0; color: #999; font-size: 14px; }
+.loading-center { display: flex; justify-content: center; padding: 40px; }
 </style>

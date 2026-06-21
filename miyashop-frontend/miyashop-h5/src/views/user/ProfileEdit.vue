@@ -161,10 +161,7 @@ const handleSave = async () => {
       showToast(res.message || '保存失败')
     }
   } catch {
-    // Mock success
-    userStore.setUserInfo({ ...userStore.userInfo, ...formData })
-    showSuccessToast('保存成功')
-    window.location.hash = '#/'
+    showToast('保存失败，请稍后重试')
   } finally {
     saving.value = false
   }

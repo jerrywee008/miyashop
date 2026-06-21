@@ -141,32 +141,15 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import TabBar from '@/components/TabBar.vue'
 import { showToast, showConfirmDialog } from 'vant'
 import { useUserStore } from '@/store/user'
+import { getCartList, updateCartItem, updateCartItemSelected, deleteCartItem, selectAllCart } from '@/api/cart'
+import { getRecommendProducts } from '@/api/product'
 
 const userStore = useUserStore()
 const editMode = ref(false)
 const cartCount = computed(() => userStore.cartCount)
 
 // ---------- 购物车数据 ----------
-const cartItems = ref<any[]>([
-  {
-    id: 1, productId: 1, skuId: 1, shopName: 'MiyaShop官方旗舰店',
-    name: '优雅碎花连衣裙 夏季新款', specs: '红色 S',
-    image: 'https://via.placeholder.com/100/FF6B95/FFFFFF?text=C1',
-    price: 299, originalPrice: 599, quantity: 1, maxStock: 50, checked: true, type: 'normal'
-  },
-  {
-    id: 2, productId: 2, skuId: 103, shopName: 'MiyaShop官方旗舰店',
-    name: '时尚纯棉衬衫', specs: '白色 M',
-    image: 'https://via.placeholder.com/100/FFB6C1/FFFFFF?text=C2',
-    price: 199, originalPrice: 399, quantity: 2, maxStock: 100, checked: true, type: 'normal'
-  },
-  {
-    id: 3, productId: 3, skuId: 201, shopName: 'MiyaShop首饰店',
-    name: '精致项链套装', specs: '金色',
-    image: 'https://via.placeholder.com/100/FFC0CB/FFFFFF?text=C3',
-    price: 159, originalPrice: 299, quantity: 1, maxStock: 30, checked: false, type: 'normal'
-  }
-])
+const cartItems = ref<any[]>([])
 
 // ---------- 分组 ----------
 const groupedItems = computed(() => {
@@ -193,16 +176,24 @@ const allChecked = computed({
   }
 })
 
-const onAllCheckChange = (val: boolean) => {
+const onAllCheckChange = async (val: boolean) => {
   cartItems.value.forEach(i => i.checked = val)
+  try {
+    await selectAllCart(val ? 1 : 0)
+  } catch { /* ignore */ }
 }
 
-const onGroupCheckChange = (group: any) => {
+const onGroupCheckChange = async (group: any) => {
   group.items.forEach((i: any) => i.checked = group.checked)
+  for (const item of group.items) {
+    try {
+      await updateCartItemSelected(item.id, item.checked ? 1 : 0)
+    } catch { /* ignore */ }
+  }
 }
 
-const onItemCheckChange = () => {
-  // triggered reactively
+const onItemCheckChange = async () => {
+  // triggered reactively — call API on individual toggle by watching
 }
 
 // ---------- 计算 ----------
@@ -225,14 +216,17 @@ const totalDiscount = computed(() => {
 const deleteCount = computed(() => cartItems.value.filter(i => i.checked).length)
 
 // ---------- 操作 ----------
-const onQuantityChange = (item: any) => {
-  // Sync changes
+const onQuantityChange = async (item: any) => {
+  try {
+    await updateCartItem(item.id, { quantity: item.quantity })
+  } catch { /* ignore */ }
   userStore.setCartCount(cartItems.value.reduce((sum, i) => sum + i.quantity, 0))
 }
 
 const removeItem = async (item: any) => {
   try {
     await showConfirmDialog({ title: '提示', message: '确定删除该商品吗？' })
+    await deleteCartItem(item.id)
     cartItems.value = cartItems.value.filter(i => i.id !== item.id)
     userStore.setCartCount(cartItems.value.reduce((sum, i) => sum + i.quantity, 0))
     showToast('已删除')
@@ -290,19 +284,36 @@ const goTab = (path: string) => {
 }
 
 // ---------- 推荐商品 ----------
-const recommendProducts = ref([
-  { id: 4, image: 'https://via.placeholder.com/300/FF6B95/FFFFFF?text=R1', name: '时尚手镯 气质款', price: 199 },
-  { id: 5, image: 'https://via.placeholder.com/300/FFB6C1/FFFFFF?text=R2', name: '口红礼盒 6支装', price: 299 },
-  { id: 6, image: 'https://via.placeholder.com/300/FFC0CB/FFFFFF?text=R3', name: '简约T恤 百搭款', price: 99 },
-  { id: 7, image: 'https://via.placeholder.com/300/FF69B4/FFFFFF?text=R4', name: '香水套装 小样', price: 159 }
-])
+const recommendProducts = ref<any[]>([])
+
+const fetchCartList = async () => {
+  try {
+    const res: any = await getCartList()
+    if (res?.code === 200 && res.data) {
+      cartItems.value = (res.data.items || res.data).map((i: any) => ({ ...i, checked: !!i.checked || !!i.selected }))
+      userStore.setCartCount(cartItems.value.reduce((sum, i) => sum + i.quantity, 0))
+    }
+  } catch { /* ignore */ }
+}
+
+const fetchRecommendProducts = async () => {
+  try {
+    const res: any = await getRecommendProducts({ page: 1, size: 4 })
+    if (res?.code === 200 && res.data) {
+      recommendProducts.value = (res.data.records || res.data).map((p: any) => ({
+        id: p.id,
+        productId: p.id,
+        image: p.image || p.pic || p.cover,
+        name: p.name || p.title,
+        price: p.price
+      }))
+    }
+  } catch { /* ignore */ }
+}
 
 onMounted(() => {
-  // Load cart from localStorage or API
-  const savedCart = localStorage.getItem('cartItems')
-  if (savedCart) {
-    try { cartItems.value = JSON.parse(savedCart) } catch { /* ignore */ }
-  }
+  fetchCartList()
+  fetchRecommendProducts()
 })
 </script>
 

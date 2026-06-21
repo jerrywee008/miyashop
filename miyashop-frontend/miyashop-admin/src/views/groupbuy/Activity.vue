@@ -53,7 +53,7 @@
       </el-table-column>
       <el-table-column label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)" size="small">
+          <el-tag :type="(getStatusType(row.status) as 'info' | 'success' | 'warning' | 'danger')" size="small">
             {{ getStatusText(row.status) }}
           </el-tag>
         </template>
@@ -154,7 +154,7 @@
         </el-table-column>
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="getTeamStatusType(row.status)" size="small">{{ getTeamStatusText(row.status) }}</el-tag>
+            <el-tag :type="(getTeamStatusType(row.status) as 'info' | 'success' | 'warning' | 'danger')" size="small">{{ getTeamStatusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="过期时间" width="170" align="center">

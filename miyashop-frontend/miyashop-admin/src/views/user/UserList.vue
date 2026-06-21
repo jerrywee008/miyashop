@@ -11,7 +11,7 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="全部" :value="undefined" />
+            <el-option label="全部" :value="('' as any)" />
             <el-option label="正常" :value="1" />
             <el-option label="禁用" :value="0" />
           </el-select>
@@ -60,7 +60,7 @@
       <el-table-column label="会员等级" width="100" align="center">
         <template #default="{ row }">
           <el-tag
-            :type="getLevelType(row.level)"
+            :type="(getLevelType(row.level) as 'info' | 'success' | 'warning' | 'danger')"
             size="small"
             effect="dark"
           >
@@ -86,7 +86,7 @@
           <el-switch
             :model-value="row.status === 1"
             active-color="#FF6B95"
-            @change="(val: boolean) => handleStatusChange(row, val ? 1 : 0)"
+            @change="(val: any) => handleStatusChange(row, val ? 1 : 0)"
           />
         </template>
       </el-table-column>

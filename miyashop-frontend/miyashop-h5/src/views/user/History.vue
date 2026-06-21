@@ -62,14 +62,7 @@ const clearAll = async () => {
 }
 
 onMounted(() => {
-  // Mock data
-  list.value = [
-    { id: 1, productId: 1, name: '优雅碎花连衣裙', price: 299, image: 'https://via.placeholder.com/300/FF6B95/FFFFFF?text=H1', date: '今天' },
-    { id: 2, productId: 2, name: '时尚纯棉衬衫', price: 199, image: 'https://via.placeholder.com/300/FFB6C1/FFFFFF?text=H2', date: '今天' },
-    { id: 3, productId: 3, name: '精致项链套装', price: 159, image: 'https://via.placeholder.com/300/FFC0CB/FFFFFF?text=H3', date: '昨天' },
-    { id: 4, productId: 4, name: '简约T恤', price: 99, image: 'https://via.placeholder.com/300/FF69B4/FFFFFF?text=H4', date: '昨天' },
-    { id: 5, productId: 5, name: '口红礼盒', price: 299, image: 'https://via.placeholder.com/300/DA70D6/FFFFFF?text=H5', date: '6月15日' }
-  ]
+  // No backend API for browsing history — leave empty
 })
 </script>
 

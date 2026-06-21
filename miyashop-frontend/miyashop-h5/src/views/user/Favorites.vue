@@ -70,6 +70,7 @@ const goBack = () => { window.location.hash = '#/user' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'
+import { getFavoriteList } from '@/api/member'
 
 const router = useRouter()
 
@@ -112,40 +113,16 @@ const batchDelete = async () => {
   } catch { /* canceled */ }
 }
 
-onMounted(() => {
-  // Mock data
-  favorites.value = [
-    {
-      id: 1, productId: 1, name: '优雅碎花连衣裙 夏季新款',
-      image: 'https://via.placeholder.com/300/FF6B95/FFFFFF?text=F1',
-      price: 299, originalPrice: 599, selected: false
-    },
-    {
-      id: 2, productId: 2, name: '时尚纯棉衬衫 百搭款',
-      image: 'https://via.placeholder.com/300/FFB6C1/FFFFFF?text=F2',
-      price: 199, originalPrice: 399, selected: false
-    },
-    {
-      id: 3, productId: 3, name: '精致项链套装 气质款',
-      image: 'https://via.placeholder.com/300/FFC0CB/FFFFFF?text=F3',
-      price: 159, originalPrice: 299, selected: false
-    },
-    {
-      id: 4, productId: 4, name: '简约T恤 基础百搭',
-      image: 'https://via.placeholder.com/300/FF69B4/FFFFFF?text=F4',
-      price: 99, selected: false
-    },
-    {
-      id: 5, productId: 5, name: '时尚手镯 轻奢款',
-      image: 'https://via.placeholder.com/300/DA70D6/FFFFFF?text=F5',
-      price: 199, originalPrice: 399, selected: false
-    },
-    {
-      id: 6, productId: 6, name: '口红礼盒 6支装',
-      image: 'https://via.placeholder.com/300/FF6B95/FFFFFF?text=F6',
-      price: 299, originalPrice: 499, selected: false
+onMounted(async () => {
+  try {
+    const res: any = await getFavoriteList({ page: 1, size: 50 })
+    if (res?.code === 200 && res.data) {
+      favorites.value = (res.data.records || res.data).map((f: any) => ({
+        ...f,
+        selected: false
+      }))
     }
-  ]
+  } catch { /* ignore */ }
 })
 </script>
 

@@ -30,3 +30,8 @@ export function getCategoryList() {
 export function getProductReviews(productId: number, params?: { page?: number; size?: number }) {
   return request.get(`/product/${productId}/reviews`, { params })
 }
+
+// 获取SKU列表
+export function getSkuList(params?: { page?: number; size?: number; productId?: number; status?: number }) {
+  return request.get('/sku/list', { params })
+}

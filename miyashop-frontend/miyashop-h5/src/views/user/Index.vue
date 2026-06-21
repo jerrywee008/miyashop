@@ -103,10 +103,12 @@
 
 <script setup lang="ts">
 import TabBar from '@/components/TabBar.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'
 import { useUserStore } from '@/store/user'
+import { getCouponList, getFavoriteList } from '@/api/member'
+import { getOrderList } from '@/api/order'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -117,16 +119,16 @@ const isLoggedIn = computed(() => !!userStore.token)
 const userInfo = computed(() => userStore.userInfo)
 
 const defaultAvatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-const couponCount = ref(3)
-const favoriteCount = ref(12)
+const couponCount = ref(0)
+const favoriteCount = ref(0)
 
-const orderNav = [
-  { key: 0, icon: 'balance-pay', text: '待支付', badge: 2 },
-  { key: 1, icon: 'logistics', text: '待发货', badge: 1 },
-  { key: 2, icon: 'send-gift-o', text: '待收货', badge: 3 },
-  { key: 3, icon: 'comment-o', text: '待评价', badge: '' },
-  { key: -1, icon: 'after-sale', text: '售后', badge: '' }
-]
+const orderNav = ref([
+  { key: 0, icon: 'balance-pay', text: '待支付', badge: 0 },
+  { key: 1, icon: 'logistics', text: '待发货', badge: 0 },
+  { key: 2, icon: 'send-gift-o', text: '待收货', badge: 0 },
+  { key: 3, icon: 'comment-o', text: '待评价', badge: 0 },
+  { key: -1, icon: 'after-sale', text: '售后', badge: 0 }
+])
 
 const goLogin = () => {
   window.location.hash = '#/login'
@@ -152,6 +154,43 @@ const handleLogout = async () => {
     showSuccessToast('已退出登录')
   } catch { /* canceled */ }
 }
+
+const fetchCounts = async () => {
+  // 获取优惠券数量
+  try {
+    const couponRes: any = await getCouponList({ status: 0 })
+    if (couponRes?.code === 200 && couponRes.data) {
+      couponCount.value = (couponRes.data.records || couponRes.data).length
+    }
+  } catch { /* ignore */ }
+
+  // 获取收藏数量
+  try {
+    const favRes: any = await getFavoriteList()
+    if (favRes?.code === 200 && favRes.data) {
+      favoriteCount.value = (favRes.data.records || favRes.data).length
+    }
+  } catch { /* ignore */ }
+
+  // 获取各状态订单数量
+  if (isLoggedIn.value) {
+    const statuses = [0, 1, 2, 3]
+    for (const status of statuses) {
+      try {
+        const orderRes: any = await getOrderList({ page: 1, size: 1, status })
+        if (orderRes?.code === 200 && orderRes.data) {
+          const total = orderRes.data.total ?? 0
+          const nav = orderNav.value.find(n => n.key === status)
+          if (nav) nav.badge = total || 0
+        }
+      } catch { /* ignore */ }
+    }
+  }
+}
+
+onMounted(() => {
+  fetchCounts()
+})
 </script>
 
 <style scoped>

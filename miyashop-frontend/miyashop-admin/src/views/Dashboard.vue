@@ -57,7 +57,7 @@
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+                <el-tag :type="(getStatusType(row.status) as 'info' | 'success' | 'warning' | 'danger')">{{ getStatusText(row.status) }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { getDashboard } from '@/api/dashboard'

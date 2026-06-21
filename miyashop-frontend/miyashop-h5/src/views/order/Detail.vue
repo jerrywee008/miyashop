@@ -141,38 +141,14 @@ const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showSuccessToast, showConfirmDialog } from 'vant'
+import { getOrderDetail, cancelOrder, confirmOrder } from '@/api/order'
 
 const router = useRouter()
 const route = useRoute()
 
-const order = ref<any>({
-  id: 1,
-  orderNo: 'ORD202406030001',
-  status: 1,
-  totalAmount: 598,
-  payAmount: 548,
-  discountAmount: 50,
-  freight: 0,
-  payType: 1,
-  receiverName: '小美',
-  receiverPhone: '138****0001',
-  receiverAddress: '广东省广州市天河区珠江新城街道100号',
-  remark: '请尽快发货',
-  expireTime: 2 * 60 * 60 * 1000,
-  createdTime: '2024-06-03 10:30:00',
-  payTime: '2024-06-03 10:31:00',
-  orderItems: [
-    { id: 1, productId: 1, productName: '优雅碎花连衣裙', skuSpecs: '红色 S', price: 299, quantity: 2, skuImage: 'https://via.placeholder.com/100/FF6B95/FFFFFF' }
-  ]
-})
+const order = ref<any>({})
 
-const logistics = ref([
-  { text: '包裹已签收', time: '2024-06-05 15:30:00' },
-  { text: '派送中，快递员正在为您派送', time: '2024-06-05 09:00:00' },
-  { text: '已到达【天河区】营业点', time: '2024-06-05 06:00:00' },
-  { text: '已从【广州分拣中心】发出', time: '2024-06-04 22:00:00' },
-  { text: '卖家已发货，等待揽收', time: '2024-06-04 18:00:00' }
-])
+const logistics = ref<any[]>([])
 
 const logisticsStep = ref(2)
 
@@ -231,6 +207,7 @@ const copyOrderNo = () => {
 const handleCancel = async () => {
   try {
     await showConfirmDialog({ title: '提示', message: '确定取消该订单吗？' })
+    await cancelOrder(order.value.id)
     order.value.status = 4
     showSuccessToast('订单已取消')
   } catch { /* canceled */ }
@@ -239,6 +216,7 @@ const handleCancel = async () => {
 const handleConfirm = async () => {
   try {
     await showConfirmDialog({ title: '提示', message: '确定已收到商品吗？' })
+    await confirmOrder(order.value.id)
     order.value.status = 3
     showSuccessToast('已确认收货')
   } catch { /* canceled */ }
@@ -247,11 +225,13 @@ const handleConfirm = async () => {
 onMounted(async () => {
   const orderId = route.params.id
   try {
-    const res = await fetch(`/api/order/${orderId}`).then(r => r.json())
-    if (res.code === 200 && res.data) {
+    const res: any = await getOrderDetail(orderId)
+    if (res?.code === 200 && res.data) {
       order.value = res.data
     }
-  } catch { /* use mock */ }
+  } catch {
+    showToast('加载订单详情失败')
+  }
 })
 </script>
 
