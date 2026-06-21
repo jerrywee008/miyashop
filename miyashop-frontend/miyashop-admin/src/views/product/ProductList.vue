@@ -143,8 +143,31 @@
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="商品图片" prop="images">
-          <el-input v-model="formData.images" placeholder="图片URL，多张用逗号分隔" />
+        <el-form-item label="商品图片">
+          <div class="image-upload-area">
+            <div v-for="(url, idx) in imageList" :key="idx" class="image-preview-item">
+              <el-image :src="url" style="width: 80px; height: 80px; border-radius: 4px" fit="cover" />
+              <el-icon class="image-remove-btn" @click="removeImage(idx)"><CircleClose /></el-icon>
+            </div>
+            <el-upload
+              v-if="imageList.length < 9"
+              :action="uploadUrl"
+              :headers="uploadHeaders"
+              :show-file-list="false"
+              :before-upload="beforeImageUpload"
+              :on-success="onImageUploadSuccess"
+              :on-error="onImageUploadError"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+            >
+              <div class="upload-trigger">
+                <el-icon><Plus /></el-icon>
+                <span>上传</span>
+              </div>
+            </el-upload>
+          </div>
+          <div style="font-size: 12px; color: #999; margin-top: 4px">
+            支持 JPG/PNG/WebP/GIF，单张不超过 10MB
+          </div>
         </el-form-item>
         <el-form-item label="商品价格" prop="price">
           <el-input-number v-model="formData.price" :min="0" :precision="2" :step="1" style="width: 200px" />
@@ -199,11 +222,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getProductList, getProductDetail, addProduct, updateProduct, deleteProduct, updateProductStatus } from '@/api/product'
 import { getCategoryTree } from '@/api/category'
+import { uploadImage } from '@/api/upload'
 
 // ---------- 搜索 ----------
 const searchForm = reactive({
@@ -313,6 +337,52 @@ const formRules: FormRules = {
   stock: [{ required: true, message: '请输入库存', trigger: 'blur' }]
 }
 
+// ── 图片上传 ──
+const imageList = ref<string[]>([])
+const uploadUrl = '/api/images/upload'
+const uploadHeaders = computed(() => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+}))
+
+const syncImagesToForm = () => {
+  formData.images = imageList.value.filter(Boolean).join(',')
+}
+
+const beforeImageUpload = (file: File) => {
+  const isValidType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)
+  if (!isValidType) {
+    ElMessage.error('仅支持 JPG / PNG / WebP / GIF 格式')
+    return false
+  }
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过 10MB')
+    return false
+  }
+  return true
+}
+
+const onImageUploadSuccess = (res: any) => {
+  if (res.code === 200 && res.data) {
+    const url = res.data.url || ''
+    if (url) {
+      imageList.value.push(url)
+      syncImagesToForm()
+    }
+  } else {
+    ElMessage.error(res.message || '上传失败')
+  }
+}
+
+const onImageUploadError = () => {
+  ElMessage.error('上传失败，请稍后重试')
+}
+
+const removeImage = (idx: number) => {
+  imageList.value.splice(idx, 1)
+  syncImagesToForm()
+}
+
 const resetForm = () => {
   formData.name = ''
   formData.categoryId = undefined
@@ -322,6 +392,7 @@ const resetForm = () => {
   formData.sort = 0
   formData.detail = ''
   formData.status = 1
+  imageList.value = []
 }
 
 const handleAdd = () => {
@@ -343,6 +414,7 @@ const handleEdit = async (row: any) => {
       formData.categoryId = data.categoryId
       formData.images = data.images || ''
       formData.price = data.price
+      imageList.value = data.images ? data.images.split(',').filter(Boolean) : []
       formData.stock = data.stock || 0
       formData.sort = data.sort || 0
       formData.detail = data.detail || ''
@@ -443,5 +515,49 @@ onMounted(() => {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+}
+
+.image-upload-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.image-preview-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 16px;
+  color: #f56c6c;
+  cursor: pointer;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.upload-trigger {
+  width: 80px;
+  height: 80px;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #999;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.upload-trigger:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 </style>
