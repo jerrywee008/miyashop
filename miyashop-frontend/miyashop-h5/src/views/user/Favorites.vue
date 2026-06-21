@@ -1,6 +1,6 @@
 <template>
   <div class="favorites-page">
-    <van-nav-bar title="我的收藏" left-arrow @click-left="$router.back()" fixed>
+    <van-nav-bar title="我的收藏" left-arrow @click="goBack" fixed>
       <template #right>
         <span class="edit-btn" @click="editMode = !editMode">
           {{ editMode ? '完成' : '管理' }}
@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'
@@ -94,7 +95,7 @@ const toggleSelectAll = (val: boolean) => {
 }
 
 const goProduct = (item: any) => {
-  router.push(`/product/${item.productId}`)
+  window.location.hash = `#/product/${item.productId}`
 }
 
 const batchDelete = async () => {

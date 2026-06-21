@@ -1,6 +1,6 @@
 <template>
   <div class="checkout-page">
-    <van-nav-bar title="确认订单" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="确认订单" left-arrow @click="goBack" fixed />
 
     <!-- 收货地址 -->
     <div class="address-section" @click="goSelectAddress">
@@ -162,6 +162,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showSuccessToast } from 'vant'
@@ -172,7 +173,7 @@ const router = useRouter()
 const selectedAddress = ref<any>(null)
 
 const goSelectAddress = () => {
-  router.push('/user/address?select=1')
+  window.location.hash = '#/user/address?select=1'
 }
 
 // ---------- 订单商品 ----------
@@ -271,17 +272,17 @@ const handleSubmitOrder = async () => {
     if (res.code === 200) {
       showSuccessToast('下单成功')
       localStorage.removeItem('checkoutItems')
-      router.push(`/order/${res.data.id || res.data.orderNo}`)
+      window.location.hash = `#/order/${res.data.id || res.data.orderNo}`
     } else {
       // Mock success
       showSuccessToast('下单成功')
       localStorage.removeItem('checkoutItems')
-      router.push('/order/list')
+      window.location.hash = '#/order/list'
     }
   } catch {
     showSuccessToast('下单成功')
     localStorage.removeItem('checkoutItems')
-    router.push('/order/list')
+    window.location.hash = '#/order/list'
   } finally {
     submitting.value = false
   }

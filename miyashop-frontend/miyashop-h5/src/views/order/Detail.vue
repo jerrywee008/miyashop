@@ -1,6 +1,6 @@
 <template>
   <div class="order-detail-page">
-    <van-nav-bar title="订单详情" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="订单详情" left-arrow @click="goBack" fixed />
 
     <!-- 订单状态 -->
     <div class="status-section" :class="`status-${order.status}`">
@@ -137,6 +137,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showSuccessToast, showConfirmDialog } from 'vant'
@@ -214,7 +215,7 @@ const actionButtons = computed(() => {
 })
 
 const goProduct = (id: number) => {
-  router.push(`/product/${id}`)
+  window.location.hash = `#/product/${id}`
 }
 
 const copyOrderNo = () => {

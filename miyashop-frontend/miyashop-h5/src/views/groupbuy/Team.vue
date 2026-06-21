@@ -1,6 +1,6 @@
 <template>
   <div class="team-page">
-    <van-nav-bar title="拼团详情" left-arrow @click-left="$router.back()" fixed>
+    <van-nav-bar title="拼团详情" left-arrow @click="goBack" fixed>
       <template #right>
         <van-icon name="share-o" size="20" @click="showShare" />
       </template>
@@ -112,7 +112,7 @@
         class="other-team-item"
         v-for="ot in otherTeams"
         :key="ot.id"
-        @click="$router.push(`/groupbuy/team/${ot.id}`)"
+        @click="window.location.hash = `#/groupbuy/team/${ot.id}`"
       >
         <div class="other-team-leader">
           <img :src="ot.leaderAvatar" class="leader-avatar" />
@@ -158,6 +158,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'

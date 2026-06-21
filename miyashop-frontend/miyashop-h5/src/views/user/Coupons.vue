@@ -1,6 +1,6 @@
 <template>
   <div class="coupons-page">
-    <van-nav-bar title="我的优惠券" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="我的优惠券" left-arrow @click="goBack" fixed />
 
     <van-tabs v-model:active="activeTab" sticky color="#FF6B95" title-active-color="#FF6B95" :offset-top="46">
       <van-tab v-for="tab in tabs" :key="tab.key" :title="tab.title">
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
@@ -71,7 +72,7 @@ const filteredCoupons = computed(() => {
 })
 
 const useCoupon = (coupon: any) => {
-  router.push('/')
+  window.location.hash = '#/'
   showToast(`满${coupon.minAmount}元可用`)
 }
 

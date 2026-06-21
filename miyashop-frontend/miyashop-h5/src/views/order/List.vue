@@ -1,6 +1,6 @@
 <template>
   <div class="order-list-page">
-    <van-nav-bar title="我的订单" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="我的订单" left-arrow @click="goBack" fixed />
 
     <!-- 订单状态Tab -->
     <van-tabs v-model:active="activeTab" sticky color="#FF6B95" title-active-color="#FF6B95" :offset-top="46">
@@ -78,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'
@@ -138,7 +139,7 @@ const getActions = (order: any) => {
 }
 
 const goDetail = (order: any) => {
-  router.push(`/order/${order.id}`)
+  window.location.hash = `#/order/${order.id}`
 }
 
 const handleAction = async (order: any, action: string) => {
@@ -167,7 +168,7 @@ const handleAction = async (order: any, action: string) => {
       showToast('查看物流信息')
       break
     case 'review':
-      router.push(`/order/${order.id}?action=review`)
+      window.location.hash = `#/order/${order.id}?action=review`
       break
     case 'rebuy':
       showToast('已加入购物车')

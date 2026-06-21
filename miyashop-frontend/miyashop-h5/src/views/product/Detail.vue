@@ -4,7 +4,7 @@
     <van-nav-bar
       title="商品详情"
       left-arrow
-      @click-left="$router.back()"
+      @click="goBack"
       fixed
     >
       <template #right>
@@ -226,6 +226,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
@@ -397,7 +398,7 @@ const doBuyNow = () => {
     quantity: quantity.value
   }]
   localStorage.setItem('checkoutItems', JSON.stringify(items))
-  router.push('/checkout')
+  window.location.hash = '#/checkout'
 }
 
 // ---------- 收藏 ----------

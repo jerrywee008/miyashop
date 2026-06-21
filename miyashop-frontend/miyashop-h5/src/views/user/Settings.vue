@@ -1,6 +1,6 @@
 <template>
   <div class="settings-page">
-    <van-nav-bar title="设置" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="设置" left-arrow @click="goBack" fixed />
 
     <!-- 账户设置 -->
     <div class="section">
@@ -78,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, reactive } from 'vue'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'
 import { useUserStore } from '@/store/user'
@@ -109,7 +110,7 @@ const handleLogout = async () => {
   try {
     await showConfirmDialog({ title: '提示', message: '确定退出登录吗？' })
     userStore.logout()
-    router.push('/')
+    window.location.hash = '#/'
     showSuccessToast('已退出登录')
   } catch { /* canceled */ }
 }

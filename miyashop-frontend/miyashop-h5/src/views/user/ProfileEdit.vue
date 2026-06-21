@@ -1,6 +1,6 @@
 <template>
   <div class="profile-page">
-    <van-nav-bar title="编辑资料" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="编辑资料" left-arrow @click="goBack" fixed />
 
     <div class="profile-content">
       <!-- 头像 -->
@@ -98,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showSuccessToast } from 'vant'
@@ -155,7 +156,7 @@ const handleSave = async () => {
     if (res.code === 200) {
       userStore.setUserInfo({ ...userStore.userInfo, ...formData })
       showSuccessToast('保存成功')
-      router.back()
+      window.location.hash = '#/'
     } else {
       showToast(res.message || '保存失败')
     }
@@ -163,7 +164,7 @@ const handleSave = async () => {
     // Mock success
     userStore.setUserInfo({ ...userStore.userInfo, ...formData })
     showSuccessToast('保存成功')
-    router.back()
+    window.location.hash = '#/'
   } finally {
     saving.value = false
   }

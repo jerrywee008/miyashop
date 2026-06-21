@@ -1,6 +1,6 @@
 <template>
   <div class="history-page">
-    <van-nav-bar title="浏览记录" left-arrow @click-left="$router.back()" fixed>
+    <van-nav-bar title="浏览记录" left-arrow @click="goBack" fixed>
       <template #right>
         <span class="clear-btn" @click="clearAll" v-if="list.length > 0">清空</span>
       </template>
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showSuccessToast } from 'vant'
@@ -49,7 +50,7 @@ const groupedList = computed(() => {
 })
 
 const goProduct = (item: any) => {
-  router.push(`/product/${item.productId}`)
+  window.location.hash = `#/product/${item.productId}`
 }
 
 const clearAll = async () => {

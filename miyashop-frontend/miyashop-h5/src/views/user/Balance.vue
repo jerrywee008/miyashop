@@ -1,6 +1,6 @@
 <template>
   <div class="balance-page">
-    <van-nav-bar title="我的余额" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="我的余额" left-arrow @click="goBack" fixed />
 
     <!-- 余额卡片 -->
     <div class="balance-card">
@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed } from 'vue'
 import { showToast } from 'vant'
 import { useUserStore } from '@/store/user'

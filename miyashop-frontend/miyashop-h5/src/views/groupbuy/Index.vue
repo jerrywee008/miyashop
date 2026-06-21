@@ -1,6 +1,6 @@
 <template>
   <div class="groupbuy-page">
-    <van-nav-bar title="拼团专区" left-arrow @click-left="$router.back()" fixed />
+    <van-nav-bar title="拼团专区" left-arrow @click="goBack" fixed />
 
     <!-- 拼团商品列表 -->
     <div class="groupbuy-products">
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+const goBack = () => { window.location.hash = '#/' }
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
@@ -136,7 +137,7 @@ const products = ref([
 ])
 
 const goTeam = (item: any) => {
-  router.push(`/groupbuy/team/${item.teamId}`)
+  window.location.hash = `#/groupbuy/team/${item.teamId}`
 }
 </script>
 

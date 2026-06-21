@@ -37,7 +37,7 @@
         <div class="countdown">
           <van-count-down :time="countdownTime" format="HH:mm:ss" />
         </div>
-        <div class="section-more" @click="$router.push('/seckill')">更多 ></div>
+        <div class="section-more" @click="window.location.hash='#/seckill'">更多 ></div>
       </div>
       <div class="seckill-list">
         <div class="seckill-item" v-for="item in seckillProducts" :key="item.id" @click="goProduct(item.id)">
@@ -55,7 +55,7 @@
           <span class="groupbuy-icon">👥</span>
           拼团优惠
         </div>
-        <div class="section-more" @click="$router.push('/groupbuy')">更多 ></div>
+        <div class="section-more" @click="window.location.hash='#/groupbuy'">更多 ></div>
       </div>
       <div class="groupbuy-list">
         <div class="groupbuy-item" v-for="item in groupbuyProducts" :key="item.id" @click="goProduct(item.id)">
