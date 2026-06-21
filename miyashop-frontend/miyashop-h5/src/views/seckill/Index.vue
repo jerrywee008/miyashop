@@ -1,6 +1,6 @@
 <template>
   <div class="seckill-page">
-    <van-nav-bar title="秒杀专区" left-arrow @click-left="$router.back()" fixed />
+    <div class="nav-bar"><span @click="goBack">← 返回</span><span class="nav-title">秒杀专区</span><span></span></div>
 
     <!-- 倒计时 -->
     <div class="seckill-header">
@@ -127,12 +127,16 @@ const products = ref([
   }
 ])
 
+const goBack = () => { window.location.hash = '#/' }
+
 const goProduct = (id: number) => {
-  router.push(`/product/${id}?type=seckill`)
+  window.location.hash = '#/product/' + id + '?type=seckill'
 }
 </script>
 
 <style scoped>
+.nav-bar { display: flex; align-items: center; justify-content: space-between; height: 46px; padding: 0 16px; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 100; }
+.nav-title { font-size: 16px; font-weight: 600; }
 .seckill-page {
   min-height: 100vh;
   background: var(--bg-secondary);
