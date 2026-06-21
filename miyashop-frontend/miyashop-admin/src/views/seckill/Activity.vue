@@ -157,6 +157,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getSeckillActivities, getSeckillActivity, createSeckillActivity, updateSeckillActivity, deleteSeckillActivity, getSeckillSkus, addSeckillSku, deleteSeckillSku } from '@/api/seckill'
+import { getSkuList } from '@/api/product'
 
 // ---------- 统计 ----------
 const statsCards = ref([
@@ -181,12 +182,6 @@ const getStatusText = (status: number) => {
   return map[status] || '未知'
 }
 
-const mockActivities = [
-  { id: 1, name: '618年中大促秒杀', startTime: '2024-06-18 00:00:00', endTime: '2024-06-18 23:59:59', status: 0, skuCount: 10, sort: 1, createdTime: '2024-06-01 10:00:00' },
-  { id: 2, name: '周末限时秒杀', startTime: '2024-06-08 10:00:00', endTime: '2024-06-08 22:00:00', status: 0, skuCount: 5, sort: 2, createdTime: '2024-06-03 09:00:00' },
-  { id: 3, name: '端午节特惠秒杀', startTime: '2024-06-01 00:00:00', endTime: '2024-06-05 23:59:59', status: 2, skuCount: 8, sort: 3, createdTime: '2024-05-28 14:00:00' }
-]
-
 const fetchData = async () => {
   loading.value = true
   try {
@@ -197,11 +192,7 @@ const fetchData = async () => {
       pagination.total = data.total || 0
     }
   } catch {
-    // Mock fallback with pagination
-    const start = (pagination.page - 1) * pagination.size
-    const end = start + pagination.size
-    tableData.value = mockActivities.slice(start, end)
-    pagination.total = mockActivities.length
+    ElMessage.error('获取秒杀活动列表失败')
   } finally {
     loading.value = false
     updateStats()
@@ -262,9 +253,8 @@ const handleEdit = async (row: any) => {
       formData.sort = data.sort || 0
     }
   } catch {
-    formData.name = row.name || ''
-    formData.timeRange = [row.startTime, row.endTime]
-    formData.sort = row.sort || 0
+    ElMessage.error('获取活动详情失败')
+    return
   }
   dialogVisible.value = true
 }
@@ -290,9 +280,7 @@ const handleSubmit = async () => {
         fetchData()
       }
     } catch {
-      ElMessage.success(isEdit.value ? '编辑成功' : '创建成功')
-      dialogVisible.value = false
-      fetchData()
+      ElMessage.error('操作失败')
     } finally {
       submitting.value = false
     }
@@ -300,9 +288,15 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = async (row: any) => {
-  try { await deleteSeckillActivity(row.id) } catch { /* ignore */ }
-  ElMessage.success('删除成功')
-  fetchData()
+  try {
+    const res = await deleteSeckillActivity(row.id)
+    if (res && res.code === 200) {
+      ElMessage.success('删除成功')
+      fetchData()
+    }
+  } catch {
+    ElMessage.error('删除失败')
+  }
 }
 
 // ---------- SKU管理 ----------
@@ -313,30 +307,32 @@ const selectedSkuId = ref<number>()
 const skuPrice = ref(0)
 const skuStock = ref(100)
 
-const availableSkus = ref([
-  { id: 101, name: '优雅碎花连衣裙-红色-S', price: 299, stock: 100 },
-  { id: 102, name: '优雅碎花连衣裙-红色-M', price: 299, stock: 80 },
-  { id: 103, name: '时尚纯棉衬衫-白色-M', price: 199, stock: 120 },
-  { id: 104, name: '简约T恤-黑色-L', price: 99, stock: 200 },
-  { id: 105, name: '精致项链-金色', price: 159, stock: 50 },
-  { id: 106, name: '时尚手镯-银色', price: 199, stock: 60 }
-])
+const availableSkus = ref<any[]>([])
+
+const fetchAvailableSkus = async () => {
+  try {
+    const res = await getSkuList({ page: 1, size: 200, status: 1 })
+    if (res.code === 200) {
+      availableSkus.value = res.data?.records || []
+    }
+  } catch {
+    ElMessage.error('获取SKU列表失败')
+  }
+}
 
 const handleManageSkus = async (row: any) => {
   currentActivityId.value = row.id
   selectedSkuId.value = undefined
   skuPrice.value = 0
   skuStock.value = 100
+  fetchAvailableSkus()
   try {
     const res = await getSeckillSkus(row.id)
     if (res.code === 200) {
       activitySkus.value = res.data || []
     }
   } catch {
-    activitySkus.value = [
-      { id: 1, skuId: 101, name: '优雅碎花连衣裙-红色-S', originalPrice: 299, seckillPrice: 99, stock: 100, sold: 85, image: 'https://via.placeholder.com/50/FF6B95/FFFFFF' },
-      { id: 2, skuId: 102, name: '优雅碎花连衣裙-红色-M', originalPrice: 299, seckillPrice: 99, stock: 80, sold: 30, image: 'https://via.placeholder.com/50/FF6B95/FFFFFF' }
-    ]
+    ElMessage.error('获取活动商品失败')
   }
   skuVisible.value = true
 }
@@ -364,7 +360,7 @@ const addSkuToActivity = () => {
     seckillPrice: skuPrice.value,
     stock: skuStock.value,
     sold: 0,
-    image: `https://via.placeholder.com/50/FF6B95/FFFFFF?text=${sku.id}`
+    image: sku.image || ''
   })
   ElMessage.success('添加成功')
 }

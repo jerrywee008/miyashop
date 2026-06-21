@@ -3,6 +3,7 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/impl/pms/ProductServiceImpl.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/sms/SeckillService.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/sms/GroupBuyService.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/impl/pms/SkuServiceImpl.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/ums/UmsAddressMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/sms/SmsSeckillSkuMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/pms/PmsReviewMapper.java
@@ -32,6 +33,7 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/pms/PmsProductAttrMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/ums/UmsMemberCouponMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/oms/CartService.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/pms/SkuService.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/impl/ums/MemberServiceImpl.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/oms/OmsPaymentMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/sys/SysMenuMapper.java

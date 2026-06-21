@@ -12,6 +12,7 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/pms/PmsProduct.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/sys/SysRole.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/sys/SysUser.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/vo/SkuVO.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/pms/PmsCategory.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/ums/UmsAddress.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/oms/OmsOrder.java

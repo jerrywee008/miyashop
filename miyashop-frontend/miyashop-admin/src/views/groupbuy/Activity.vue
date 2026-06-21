@@ -191,6 +191,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getGroupBuyActivities, getGroupBuyActivity, createGroupBuyActivity, updateGroupBuyActivity, deleteGroupBuyActivity, getTeamList, getTeamDetail } from '@/api/groupbuy'
+import { getSkuList } from '@/api/product'
 
 // ---------- 统计 ----------
 const statsCards = ref([
@@ -216,32 +217,14 @@ const getStatusText = (status: number) => {
 }
 
 const getTeamStatusType = (status: number) => {
-  const map: Record<number, string> = { 0: '', 1: 'warning', 2: 'success', 3: 'danger' }
-  return map[status] || ''
+  const map: Record<number, string> = { 0: 'info', 1: 'warning', 2: 'success', 3: 'danger' }
+  return map[status] || 'info'
 }
 
 const getTeamStatusText = (status: number) => {
   const map: Record<number, string> = { 0: '待成团', 1: '进行中', 2: '已成团', 3: '已失败' }
   return map[status] || '未知'
 }
-
-const mockActivities = [
-  {
-    id: 1, name: '连衣裙拼团优惠', skuId: 101, productName: '优雅碎花连衣裙', productImage: 'https://via.placeholder.com/50/FF6B95/FFFFFF',
-    originalPrice: 399, groupbuyPrice: 199, minPeople: 3, maxPeople: 5, validHours: 24,
-    startTime: '2024-06-01 00:00:00', endTime: '2024-06-30 23:59:59', status: 1, sort: 1
-  },
-  {
-    id: 2, name: '衬衫超值团购', skuId: 103, productName: '时尚纯棉衬衫', productImage: 'https://via.placeholder.com/50/FFB6C1/FFFFFF',
-    originalPrice: 299, groupbuyPrice: 159, minPeople: 2, maxPeople: 10, validHours: 48,
-    startTime: '2024-06-10 00:00:00', endTime: '2024-06-20 23:59:59', status: 0, sort: 2
-  },
-  {
-    id: 3, name: '项链套装拼团', skuId: 105, productName: '精致项链套装', productImage: 'https://via.placeholder.com/50/FFC0CB/FFFFFF',
-    originalPrice: 599, groupbuyPrice: 299, minPeople: 4, maxPeople: 8, validHours: 72,
-    startTime: '2024-05-20 00:00:00', endTime: '2024-05-31 23:59:59', status: 2, sort: 3
-  }
-]
 
 const fetchData = async () => {
   loading.value = true
@@ -253,11 +236,7 @@ const fetchData = async () => {
       pagination.total = data.total || 0
     }
   } catch {
-    // Mock fallback with pagination
-    const start = (pagination.page - 1) * pagination.size
-    const end = start + pagination.size
-    tableData.value = mockActivities.slice(start, end)
-    pagination.total = mockActivities.length
+    ElMessage.error('获取团购活动列表失败')
   } finally {
     loading.value = false
     updateStats()
@@ -266,7 +245,7 @@ const fetchData = async () => {
 
 const updateStats = () => {
   let notStarted = 0, running = 0, ended = 0
-  mockActivities.forEach(a => {
+  tableData.value.forEach(a => {
     if (a.status === 0) notStarted++
     else if (a.status === 1) running++
     else if (a.status === 2) ended++
@@ -277,12 +256,18 @@ const updateStats = () => {
   statsCards.value[3].value = pagination.total
 }
 
-const productOptions = ref([
-  { id: 101, name: '优雅碎花连衣裙-红色-S', price: 399 },
-  { id: 102, name: '优雅碎花连衣裙-红色-M', price: 399 },
-  { id: 103, name: '时尚纯棉衬衫-白色-M', price: 299 },
-  { id: 105, name: '精致项链套装-金色', price: 599 }
-])
+const productOptions = ref<any[]>([])
+
+const fetchProductOptions = async () => {
+  try {
+    const res = await getSkuList({ page: 1, size: 200, status: 1 })
+    if (res.code === 200) {
+      productOptions.value = res.data?.records || []
+    }
+  } catch {
+    ElMessage.error('获取商品SKU列表失败')
+  }
+}
 
 // ---------- 新增/编辑 ----------
 const dialogVisible = ref(false)
@@ -317,6 +302,7 @@ const handleAdd = () => {
   isEdit.value = false
   dialogTitle.value = '创建团购活动'
   resetForm()
+  fetchProductOptions()
   dialogVisible.value = true
 }
 
@@ -336,6 +322,7 @@ const handleEdit = async (row: any) => {
   isEdit.value = true
   editId.value = row.id
   dialogTitle.value = '编辑团购活动'
+  fetchProductOptions()
   try {
     const res = await getGroupBuyActivity(row.id)
     if (res.code === 200) {
@@ -343,7 +330,8 @@ const handleEdit = async (row: any) => {
       fillForm(data)
     }
   } catch {
-    fillForm(row)
+    ElMessage.error('获取团购活动详情失败')
+    return
   }
   dialogVisible.value = true
 }
@@ -387,9 +375,7 @@ const handleSubmit = async () => {
         fetchData()
       }
     } catch {
-      ElMessage.success(isEdit.value ? '编辑成功' : '创建成功')
-      dialogVisible.value = false
-      fetchData()
+      ElMessage.error('操作失败')
     } finally {
       submitting.value = false
     }
@@ -397,9 +383,15 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = async (row: any) => {
-  try { await deleteGroupBuyActivity(row.id) } catch { /* ignore */ }
-  ElMessage.success('删除成功')
-  fetchData()
+  try {
+    const res = await deleteGroupBuyActivity(row.id)
+    if (res && res.code === 200) {
+      ElMessage.success('删除成功')
+      fetchData()
+    }
+  } catch {
+    ElMessage.error('删除失败')
+  }
 }
 
 // ---------- 队伍列表 ----------
@@ -430,11 +422,7 @@ const fetchTeams = async () => {
       teamPagination.total = data.total || 0
     }
   } catch {
-    teamData.value = [
-      { id: 1, leaderName: '小美', leaderAvatar: 'https://via.placeholder.com/24/FF6B95/FFFFFF', currentPeople: 2, maxPeople: 5, status: 0, expireTime: '2024-06-04 10:00:00', createdTime: '2024-06-03 10:00:00' },
-      { id: 2, leaderName: '丽丽', leaderAvatar: 'https://via.placeholder.com/24/FFB6C1/FFFFFF', currentPeople: 3, maxPeople: 3, status: 2, expireTime: '2024-06-03 18:00:00', createdTime: '2024-06-02 18:00:00' }
-    ]
-    teamPagination.total = 2
+    ElMessage.error('获取队伍列表失败')
   } finally {
     teamLoading.value = false
   }
@@ -447,7 +435,7 @@ const viewTeamDetail = async (row: any) => {
       ElMessage.info('队伍详情数据已加载')
     }
   } catch {
-    ElMessage.info(`队伍ID: ${row.id}, 团长: ${row.leaderName}`)
+    ElMessage.error('获取队伍详情失败')
   }
 }
 

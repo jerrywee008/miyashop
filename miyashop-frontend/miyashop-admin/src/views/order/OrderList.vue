@@ -254,10 +254,7 @@ const fetchData = async () => {
       pagination.total = data.total || 0
     }
   } catch {
-    // Mock data
-    tableData.value = mockOrders
-    pagination.total = mockOrders.length
-    updateStats()
+    ElMessage.error('获取订单列表失败')
   } finally {
     loading.value = false
   }
@@ -275,39 +272,6 @@ const updateStats = () => {
   orderStats.value[4].value = stats[4] || 0
   orderStats.value[5].value = stats[5] || 0
 }
-
-const mockOrders = [
-  {
-    id: 1, orderNo: 'ORD202406030001', userId: 1, receiverName: '小美',
-    totalAmount: 598, payAmount: 558, discountAmount: 40, freight: 0, status: 1, payType: 1,
-    orderItems: [{ id: 1, productName: '优雅碎花连衣裙', quantity: 2, skuImage: 'https://via.placeholder.com/40/FF6B95/FFFFFF' }],
-    createdTime: '2024-06-03 10:30:00', payTime: '2024-06-03 10:31:00'
-  },
-  {
-    id: 2, orderNo: 'ORD202406030002', userId: 2, receiverName: '丽丽',
-    totalAmount: 299, payAmount: 299, discountAmount: 0, freight: 0, status: 2, payType: 2,
-    orderItems: [{ id: 2, productName: '精致项链套装', quantity: 1, skuImage: 'https://via.placeholder.com/40/FFB6C1/FFFFFF' }],
-    createdTime: '2024-06-03 09:15:00', payTime: '2024-06-03 09:16:00'
-  },
-  {
-    id: 3, orderNo: 'ORD202406030003', userId: 3, receiverName: '芳芳',
-    totalAmount: 199, payAmount: 199, discountAmount: 0, freight: 0, status: 0, payType: 0,
-    orderItems: [{ id: 3, productName: '简约T恤', quantity: 1 }],
-    createdTime: '2024-06-03 14:20:00', payTime: null
-  },
-  {
-    id: 4, orderNo: 'ORD202406030004', userId: 1, receiverName: '小美',
-    totalAmount: 399, payAmount: 369, discountAmount: 30, freight: 0, status: 3, payType: 1,
-    orderItems: [{ id: 4, productName: '时尚手提包', quantity: 1, skuImage: 'https://via.placeholder.com/40/FF69B4/FFFFFF' }],
-    createdTime: '2024-06-02 16:45:00', payTime: '2024-06-02 16:46:00'
-  },
-  {
-    id: 5, orderNo: 'ORD202406030005', userId: 4, receiverName: '小红',
-    totalAmount: 159, payAmount: 159, discountAmount: 0, freight: 0, status: 4, payType: 1,
-    orderItems: [{ id: 5, productName: '时尚纯棉衬衫', quantity: 1 }],
-    createdTime: '2024-06-03 08:00:00', payTime: '2024-06-03 08:01:00'
-  }
-]
 
 const handleSearch = () => { pagination.page = 1; fetchData() }
 const handleReset = () => {
@@ -329,7 +293,8 @@ const handleView = async (row: any) => {
       detailData.value = res.data
     }
   } catch {
-    detailData.value = row
+    ElMessage.error('获取订单详情失败')
+    return
   }
   detailVisible.value = true
 }
@@ -366,9 +331,7 @@ const confirmShip = async () => {
         fetchData()
       }
     } catch {
-      ElMessage.success('发货成功')
-      shipVisible.value = false
-      fetchData()
+      ElMessage.error('发货失败，请稍后重试')
     } finally {
       shipSubmitting.value = false
     }
@@ -398,8 +361,7 @@ const handleRefund = async (row: any, agree: boolean) => {
       fetchData()
     }
   } catch {
-    ElMessage.success('退款处理成功')
-    fetchData()
+    ElMessage.error('退款处理失败')
   }
 }
 

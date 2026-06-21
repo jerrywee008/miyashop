@@ -212,55 +212,25 @@ const onNodeCollapse = () => { /* tracked by el-tree */ }
 const loading = ref(false)
 const treeData = ref<any[]>([])
 
-// Mock data per parent
-const mockChildrenMap: Record<number, any[]> = {
-  0: [
-    { id: 1, parentId: 0, name: '女装', level: 1, sort: 1, showStatus: 1 },
-    { id: 7, parentId: 0, name: '首饰', level: 1, sort: 2, showStatus: 1 },
-    { id: 12, parentId: 0, name: '彩妆', level: 1, sort: 3, showStatus: 1 }
-  ],
-  1: [
-    { id: 2, parentId: 1, name: '连衣裙', level: 2, sort: 1, showStatus: 1 },
-    { id: 3, parentId: 1, name: '衬衫', level: 2, sort: 2, showStatus: 1 },
-    { id: 4, parentId: 1, name: 'T恤', level: 2, sort: 3, showStatus: 1 }
-  ],
-  4: [
-    { id: 5, parentId: 4, name: '短袖T恤', level: 3, sort: 1, showStatus: 1 },
-    { id: 6, parentId: 4, name: '长袖T恤', level: 3, sort: 2, showStatus: 1 }
-  ],
-  7: [
-    { id: 8, parentId: 7, name: '项链', level: 2, sort: 1, showStatus: 1 },
-    { id: 9, parentId: 7, name: '耳环', level: 2, sort: 2, showStatus: 1 }
-  ],
-  12: [
-    { id: 13, parentId: 12, name: '口红', level: 2, sort: 1, showStatus: 1 },
-    { id: 14, parentId: 12, name: '眼影', level: 2, sort: 2, showStatus: 1 }
-  ]
-}
-
 const loadNode = (node: Node, resolve: (data: any[]) => void) => {
   // node.level === 0: loading root nodes
   const parentId = node.level === 0 ? 0 : (node.key as number)
 
   getCategoryList({ parentId })
     .then((res) => {
-      if (res.code === 200 && res.data?.length) {
-        const children = res.data.map((item: any) => ({
+      if (res.code === 200) {
+        const children = (res.data || []).map((item: any) => ({
           ...item,
           leaf: item.level >= 3
         }))
         resolve(children)
       } else {
-        // fallback to mock
-        const mock = mockChildrenMap[parentId] || []
-        const children = mock.map(item => ({ ...item, leaf: item.level >= 3 }))
-        resolve(children)
+        resolve([])
       }
     })
     .catch(() => {
-      const mock = mockChildrenMap[parentId] || []
-      const children = mock.map(item => ({ ...item, leaf: item.level >= 3 }))
-      resolve(children)
+      ElMessage.error('加载分类失败')
+      resolve([])
     })
 }
 
@@ -269,13 +239,11 @@ const refreshTree = async () => {
   loading.value = true
   try {
     const res = await getCategoryList({ parentId: 0 })
-    if (res.code === 200 && res.data?.length) {
-      treeData.value = res.data.map((item: any) => ({ ...item, leaf: item.level >= 3 }))
-    } else {
-      treeData.value = (mockChildrenMap[0] || []).map(item => ({ ...item, leaf: item.level >= 3 }))
+    if (res.code === 200) {
+      treeData.value = (res.data || []).map((item: any) => ({ ...item, leaf: item.level >= 3 }))
     }
   } catch {
-    treeData.value = (mockChildrenMap[0] || []).map(item => ({ ...item, leaf: item.level >= 3 }))
+    ElMessage.error('加载分类失败')
   } finally {
     loading.value = false
     await nextTick()
@@ -316,8 +284,7 @@ const handleStatusChange = async (row: any, showStatus: number) => {
       refreshTree()
     }
   } catch {
-    ElMessage.success(showStatus === 1 ? '已显示' : '已隐藏')
-    row.showStatus = showStatus
+    ElMessage.error('操作失败')
   }
 }
 
@@ -390,13 +357,8 @@ const handleEdit = async (row: any) => {
       }
     }
   } catch {
-    formData.parentId = row.parentId || 0
-    formData.name = row.name || ''
-    formData.level = row.level || 1
-    formData.icon = row.icon || ''
-    formData.sort = row.sort || 0
-    formData.showStatus = row.showStatus ?? 1
-    parentName.value = row.parentId > 0 ? '父级分类' : '顶级分类'
+    ElMessage.error('获取分类详情失败')
+    return
   }
   dialogVisible.value = true
 }
@@ -417,15 +379,9 @@ const handleSubmit = async () => {
         ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
         dialogVisible.value = false
         refreshTree()
-      } else {
-        ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
-        dialogVisible.value = false
-        refreshTree()
       }
     } catch {
-      ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
-      dialogVisible.value = false
-      refreshTree()
+      ElMessage.error('操作失败')
     } finally {
       submitting.value = false
     }
@@ -438,12 +394,11 @@ const handleDelete = async (row: any) => {
     const res = await deleteCategory(row.id)
     if (res && res.code === 200) {
       ElMessage.success('删除成功')
+      refreshTree()
     }
   } catch {
-    // Mock success
+    ElMessage.error('删除失败')
   }
-  ElMessage.success('删除成功')
-  refreshTree()
 }
 
 onMounted(() => {

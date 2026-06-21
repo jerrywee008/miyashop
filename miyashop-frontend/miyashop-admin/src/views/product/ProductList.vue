@@ -222,7 +222,7 @@ const loadCategories = async () => {
       categoryOptions.value = res.data || []
     }
   } catch {
-    // ignore
+    ElMessage.error('加载分类选项失败')
   }
 }
 

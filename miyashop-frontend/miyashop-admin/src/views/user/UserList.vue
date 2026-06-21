@@ -170,8 +170,8 @@ const tableData = ref<any[]>([])
 const pagination = reactive({ page: 1, size: 10, total: 0 })
 
 const getLevelType = (level: number) => {
-  const map: Record<number, string> = { 1: '', 2: 'success', 3: 'warning', 4: 'danger' }
-  return map[level] || ''
+  const map: Record<number, string> = { 1: 'info', 2: 'success', 3: 'warning', 4: 'danger' }
+  return map[level] || 'info'
 }
 
 const fetchData = async () => {
@@ -186,8 +186,7 @@ const fetchData = async () => {
       pagination.total = data.total || 0
     }
   } catch {
-    tableData.value = mockUsers
-    pagination.total = mockUsers.length
+    ElMessage.error('获取用户列表失败')
   } finally {
     loading.value = false
     updateStats()
@@ -195,19 +194,11 @@ const fetchData = async () => {
 }
 
 const updateStats = () => {
-  statsCards.value[0].value = tableData.value.length
+  statsCards.value[0].value = pagination.total
   statsCards.value[3].value = tableData.value.filter(u => u.status === 0).length
   statsCards.value[1].value = 12
   statsCards.value[2].value = 86
 }
-
-const mockUsers = [
-  { id: 1, userId: 'U001', nickname: '小美', mobile: '138****0001', gender: 2, level: 3, points: 1560, balance: 288.50, totalSpent: 3580, status: 1, createdTime: '2024-01-15 10:30:00', lastLoginTime: '2024-06-03 09:15:00' },
-  { id: 2, userId: 'U002', nickname: '丽丽', mobile: '139****0002', gender: 2, level: 2, points: 890, balance: 128.00, totalSpent: 1680, status: 1, createdTime: '2024-02-20 14:20:00', lastLoginTime: '2024-06-02 18:00:00' },
-  { id: 3, userId: 'U003', nickname: '芳芳', mobile: '137****0003', gender: 2, level: 4, points: 3200, balance: 568.00, totalSpent: 8900, status: 1, createdTime: '2023-10-08 11:00:00', lastLoginTime: '2024-06-03 08:30:00' },
-  { id: 4, userId: 'U004', nickname: '小红', mobile: '136****0004', gender: 1, level: 1, points: 120, balance: 28.00, totalSpent: 299, status: 1, createdTime: '2024-05-10 16:45:00', lastLoginTime: '2024-05-28 12:00:00' },
-  { id: 5, userId: 'U005', nickname: '小明', mobile: '135****0005', gender: 1, level: 1, points: 0, balance: 0, totalSpent: 0, status: 0, createdTime: '2024-06-01 09:00:00', lastLoginTime: null }
-]
 
 const handleSearch = () => { pagination.page = 1; fetchData() }
 const handleReset = () => {

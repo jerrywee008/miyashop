@@ -35,3 +35,13 @@ export function deleteProduct(id: number) {
 export function updateProductStatus(id: number, status: number) {
   return request.put(`/product/${id}/status`, null, { params: { status } })
 }
+
+// SKU列表
+export function getSkuList(params?: {
+  page?: number
+  size?: number
+  productId?: number
+  status?: number
+}) {
+  return request.get('/sku/list', { params })
+}
