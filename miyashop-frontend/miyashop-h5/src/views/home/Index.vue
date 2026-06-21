@@ -94,28 +94,19 @@
     </div>
 
     <!-- 底部导航 -->
-    <van-tabbar v-model="activeTab" route active-color="#FF6B95">
-      <van-tabbar-item to="/" icon="home-o">首页</van-tabbar-item>
-      <van-tabbar-item to="/seckill" icon="fire-o">秒杀</van-tabbar-item>
-      <van-tabbar-item to="/cart" icon="shopping-cart-o" :badge="cartCount > 0 ? cartCount : null">
-        购物车
-      </van-tabbar-item>
-      <van-tabbar-item to="/user" icon="user-o">我的</van-tabbar-item>
-    </van-tabbar>
+    <TabBar :tab="0" :badge="cartCount" />
   </div>
 </template>
 
 <script setup lang="ts">
 defineOptions({ name: 'HomePage' })
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import TabBar from '@/components/TabBar.vue'
 import { useUserStore } from '@/store/user'
 
-const router = useRouter()
 const userStore = useUserStore()
 
 const searchText = ref('')
-const activeTab = ref(0)
 const countdownTime = ref(2 * 60 * 60 * 1000) // 2小时
 
 const cartCount = computed(() => userStore.cartCount)

@@ -15,7 +15,7 @@
       image="shopping-cart-o"
       description="购物车还是空的"
     >
-      <van-button type="danger" round custom-style="background: #FF6B95; border-color: #FF6B95" @click="goTab('/')">
+      <van-button type="danger" round custom-style="background: #FF6B95; border-color: #FF6B95" @click="goHome()">
         去逛逛
       </van-button>
     </van-empty>
@@ -95,62 +95,54 @@
       </div>
     </div>
 
-    <!-- 底部结算栏 -->
-    <van-submit-bar
-      v-if="cartItems.length > 0"
-      :price="editMode ? 0 : totalPrice * 100"
-      :button-text="editMode ? `删除(${deleteCount})` : `去结算(${checkedCount})`"
-      @submit="handleSubmit"
-    >
-      <template #default>
-        <van-checkbox
-          v-model="allChecked"
-          @change="onAllCheckChange"
-          icon-size="18"
-          checked-color="#FF6B95"
-        />
-        <span class="check-all-text">全选</span>
-      </template>
-      <template #tip v-if="!editMode && totalDiscount > 0">
-        已优惠 <span class="discount-amount">¥{{ totalDiscount }}</span> 元
-      </template>
-    </van-submit-bar>
-
-    <!-- 底部导航 -->
-    <div class="custom-tabbar">
-      <div class="tabbar-item" :class="{ active: activeTab === 0 }" @click="goTab('/')">
-        <span class="tabbar-icon">🏠</span>
-        <span class="tabbar-label">首页</span>
-      </div>
-      <div class="tabbar-item" :class="{ active: activeTab === 1 }" @click="goTab('/seckill')">
-        <span class="tabbar-icon">⚡</span>
-        <span class="tabbar-label">秒杀</span>
-      </div>
-      <div class="tabbar-item" :class="{ active: activeTab === 2 }" @click="goTab('/cart')">
-        <div class="tabbar-icon-wrap">
-          <span class="tabbar-icon">🛒</span>
-          <span class="tabbar-badge" v-if="cartCount > 0">{{ cartCount > 99 ? '99+' : cartCount }}</span>
+    <!-- 底部固定块：结算栏 + TabBar -->
+    <div class="bottom-bar" v-if="cartItems.length > 0">
+      <div class="settle-row">
+        <div class="settle-left">
+          <div class="check-all" @click="onAllCheckChange(!allChecked)">
+            <span class="check-box" :class="{ on: allChecked }">✓</span>
+            <span class="check-text">全选</span>
+          </div>
+          <div class="settle-info">
+            <div class="settle-total" v-if="!editMode">
+              <span class="total-label">合计:</span>
+              <span class="total-price">¥{{ totalPrice.toFixed(2) }}</span>
+            </div>
+            <div class="settle-discount" v-if="!editMode && totalDiscount > 0">已优惠 ¥{{ totalDiscount }}</div>
+          </div>
         </div>
-        <span class="tabbar-label">购物车</span>
+        <button class="settle-btn" :class="{ danger: editMode }" @click="handleSubmit">
+          {{ editMode ? `删除(${deleteCount})` : `去结算(${checkedCount})` }}
+        </button>
       </div>
-      <div class="tabbar-item" :class="{ active: activeTab === 3 }" @click="goTab('/user')">
-        <span class="tabbar-icon">👤</span>
-        <span class="tabbar-label">我的</span>
+      <TabBar :tab="2" :badge="cartCount" inline />
+    </div>
+    <div class="bottom-bar bottom-bar-empty" v-else>
+      <div class="settle-row">
+        <div class="settle-left">
+          <div class="check-all">
+            <span class="check-box" :class="{ on: allChecked }">✓</span>
+            <span class="check-text">全选</span>
+          </div>
+          <div class="settle-info">
+            <span class="total-label">合计:</span>
+            <span class="total-price">¥0.00</span>
+          </div>
+        </div>
+        <button class="settle-btn" disabled>去结算(0)</button>
       </div>
+      <TabBar :tab="2" :badge="cartCount" inline />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import TabBar from '@/components/TabBar.vue'
 import { showToast, showConfirmDialog } from 'vant'
 import { useUserStore } from '@/store/user'
 
-const router = useRouter()
 const userStore = useUserStore()
-
-const activeTab = ref(2)
 const editMode = ref(false)
 const cartCount = computed(() => userStore.cartCount)
 
@@ -286,6 +278,8 @@ const handleSubmit = () => {
   }
 }
 
+const goHome = () => { window.location.hash = '#/' }
+
 const goProduct = (item: any) => {
   if (editMode.value) return
   window.location.hash = `#/product/${item.productId}`
@@ -317,8 +311,26 @@ onMounted(() => {
   min-height: 100vh;
   background: var(--bg-secondary);
   padding-top: 46px;
-  padding-bottom: 100px;
+  padding-bottom: 110px;
 }
+
+/* ========== 底部固定块 ========== */
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: #fff; }
+.bottom-bar-empty { opacity: 0.7; }
+.settle-row { display: flex; align-items: center; padding: 0 16px; height: 50px; border-top: 1px solid #f0f0f0; }
+.settle-left { flex: 1; display: flex; align-items: center; gap: 12px; }
+.check-all { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
+.check-box { width: 18px; height: 18px; border: 2px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; }
+.check-box.on { background: #FF6B95; border-color: #FF6B95; color: #fff; }
+.check-text { font-size: 13px; color: #333; }
+.settle-info { flex: 1; }
+.settle-total { font-size: 14px; }
+.total-label { color: #333; }
+.total-price { color: #FF6B95; font-weight: 700; font-size: 16px; }
+.settle-discount { font-size: 11px; color: #FF6B95; }
+.settle-btn { height: 36px; padding: 0 20px; background: #FF6B95; color: #fff; border: none; border-radius: 18px; font-size: 14px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+.settle-btn.danger { background: #F56C6C; }
+.settle-btn:disabled { background: #ccc; }
 
 .edit-btn {
   font-size: 14px;
@@ -521,68 +533,6 @@ onMounted(() => {
 .discount-amount {
   color: var(--primary-color);
   font-weight: 600;
-}
-
-/* ========== 自定义底部导航 ========== */
-.custom-tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  height: 50px;
-  background: #fff;
-  border-top: 1px solid #eee;
-  z-index: 999;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.tabbar-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  height: 100%;
-  cursor: pointer;
-  gap: 2px;
-}
-
-.tabbar-icon {
-  font-size: 24px;
-  line-height: 1;
-}
-
-.tabbar-label {
-  font-size: 15px;
-  color: #666;
-}
-
-.tabbar-item.active .tabbar-label {
-  color: #FF6B95;
-}
-
-.tabbar-icon-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
-.tabbar-badge {
-  position: absolute;
-  top: -6px;
-  right: -10px;
-  background: #FF6B95;
-  color: #fff;
-  font-size: 10px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
 }
 
 /* ========== PC 宽屏 ========== */
