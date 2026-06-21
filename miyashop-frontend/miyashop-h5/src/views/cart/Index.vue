@@ -115,7 +115,7 @@
           {{ editMode ? `删除(${deleteCount})` : `去结算(${checkedCount})` }}
         </button>
       </div>
-      <TabBar :tab="2" :badge="cartCount" inline />
+      <TabBar :tab="3" :badge="cartCount" inline />
     </div>
     <div class="bottom-bar bottom-bar-empty" v-else>
       <div class="settle-row">
@@ -131,7 +131,7 @@
         </div>
         <button class="settle-btn" disabled>去结算(0)</button>
       </div>
-      <TabBar :tab="2" :badge="cartCount" inline />
+      <TabBar :tab="3" :badge="cartCount" inline />
     </div>
   </div>
 </template>
