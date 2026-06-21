@@ -31,9 +31,11 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/pms/ProductService.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/impl/pms/CategoryServiceImpl.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/pms/PmsProductAttrMapper.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/DashboardService.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/ums/UmsMemberCouponMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/oms/CartService.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/pms/SkuService.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/impl/DashboardServiceImpl.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/service/impl/ums/MemberServiceImpl.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/oms/OmsPaymentMapper.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-service/src/main/java/com/miya/mapper/sys/SysMenuMapper.java

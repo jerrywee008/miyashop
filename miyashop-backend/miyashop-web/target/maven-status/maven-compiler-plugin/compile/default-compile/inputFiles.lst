@@ -13,4 +13,5 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/pms/SkuController.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/admin/AdminAuthController.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/MiyaShopApplication.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/controller/DashboardController.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-web/src/main/java/com/miya/web/task/GroupBuyScheduler.java

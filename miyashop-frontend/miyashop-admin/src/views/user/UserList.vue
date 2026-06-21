@@ -146,6 +146,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { getUserList } from '@/api/user'
 
 const router = useRouter()
 
@@ -177,9 +178,13 @@ const getLevelType = (level: number) => {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await fetch('/api/user/list', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(r => r.json())
+    const res = await getUserList({
+      page: pagination.page,
+      size: pagination.size,
+      keyword: searchForm.keyword || undefined,
+      mobile: searchForm.mobile || undefined,
+      status: searchForm.status
+    })
     if (res.code === 200) {
       const data = res.data
       tableData.value = data.records || []
@@ -196,8 +201,6 @@ const fetchData = async () => {
 const updateStats = () => {
   statsCards.value[0].value = pagination.total
   statsCards.value[3].value = tableData.value.filter(u => u.status === 0).length
-  statsCards.value[1].value = 12
-  statsCards.value[2].value = 86
 }
 
 const handleSearch = () => { pagination.page = 1; fetchData() }
