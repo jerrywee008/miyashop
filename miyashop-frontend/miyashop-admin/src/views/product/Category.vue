@@ -2,72 +2,99 @@
   <div class="page-container">
     <div class="action-section">
       <el-button type="primary" @click="handleAdd(0, 1)">新增一级分类</el-button>
-      <el-button @click="fetchData" :icon="'Refresh'">刷新</el-button>
+      <el-button-group style="margin-left: 12px">
+        <el-button :type="expandAll ? 'primary' : 'default'" size="default" @click="handleExpandAll">
+          <el-icon><Expand /></el-icon>
+          展开全部
+        </el-button>
+        <el-button :type="!expandAll ? 'primary' : 'default'" size="default" @click="handleCollapseAll">
+          <el-icon><Fold /></el-icon>
+          折叠全部
+        </el-button>
+      </el-button-group>
+      <el-button @click="refreshTree" :icon="'Refresh'">刷新</el-button>
     </div>
 
-    <el-table
-      :data="tableData"
-      v-loading="loading"
-      border
-      row-key="id"
-      style="width: 100%; margin-top: 16px"
-      :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-      default-expand-all
-    >
-      <el-table-column prop="id" label="ID" width="80" align="center" />
-      <el-table-column prop="name" label="分类名称" min-width="180" />
-      <el-table-column label="分类图标" width="80" align="center">
-        <template #default="{ row }">
-          <el-image
-            v-if="row.icon"
-            :src="row.icon"
-            style="width: 40px; height: 40px; border-radius: 50%"
-            fit="cover"
-          />
+    <!-- 分类树 -->
+    <div v-loading="loading" class="tree-container">
+      <el-empty v-if="!loading && treeData.length === 0" description="暂无分类数据" />
+      <el-tree
+        v-else
+        ref="treeRef"
+        :data="treeData"
+        :props="treeProps"
+        node-key="id"
+        :expand-on-click-node="false"
+        :indent="32"
+        lazy
+        :load="loadNode"
+        @node-expand="onNodeExpand"
+        @node-collapse="onNodeCollapse"
+      >
+        <template #default="{ data }">
+          <div class="tree-node-content">
+            <!-- 加载中指示 -->
+            <el-icon v-if="data._loading" class="node-loading is-loading">
+              <Loading />
+            </el-icon>
+            <el-image
+              v-else-if="data.icon"
+              :src="data.icon"
+              class="node-icon"
+              fit="cover"
+            />
+            <span v-else class="node-icon-placeholder">
+              <el-icon><Folder /></el-icon>
+            </span>
+
+            <!-- 分类信息 -->
+            <div class="node-info">
+              <span class="node-name">{{ data.name }}</span>
+              <span class="node-meta">
+                <el-tag :type="getLevelType(data.level)" size="small">
+                  {{ getLevelLabel(data.level) }}
+                </el-tag>
+                <span class="node-sort">排序: {{ data.sort }}</span>
+                <span class="node-id">ID: {{ data.id }}</span>
+              </span>
+            </div>
+
+            <!-- 状态 & 操作 -->
+            <div class="node-actions">
+              <el-switch
+                :model-value="data.showStatus === 1"
+                active-color="#FF6B95"
+                size="small"
+                @click.stop
+                @change="(val: boolean) => handleStatusChange(data, val ? 1 : 0)"
+              />
+              <el-button size="small" type="primary" link @click.stop="handleEdit(data)">
+                编辑
+              </el-button>
+              <el-button
+                size="small"
+                type="success"
+                link
+                @click.stop="handleAdd(data.id, data.level + 1)"
+                v-if="data.level < 3"
+              >
+                添加子分类
+              </el-button>
+              <el-popconfirm
+                title="确定删除该分类吗？"
+                confirm-button-text="确定"
+                cancel-button-text="取消"
+                @confirm="handleDelete(data)"
+              >
+                <template #reference>
+                  <el-button size="small" type="danger" link @click.stop>删除</el-button>
+                </template>
+              </el-popconfirm>
+            </div>
+          </div>
         </template>
-      </el-table-column>
-      <el-table-column label="层级" width="80" align="center">
-        <template #default="{ row }">
-          <el-tag size="small" :type="getLevelType(row.level)">
-            {{ getLevelLabel(row.level) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="sort" label="排序" width="80" align="center" />
-      <el-table-column label="状态" width="100" align="center">
-        <template #default="{ row }">
-          <el-switch
-            :model-value="row.showStatus === 1"
-            active-color="#FF6B95"
-            @change="(val: boolean) => handleStatusChange(row, val ? 1 : 0)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="260" align="center" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" type="primary" link @click="handleEdit(row)">编辑</el-button>
-          <el-button
-            size="small"
-            type="success"
-            link
-            @click="handleAdd(row.id, row.level + 1)"
-            v-if="row.level < 3"
-          >
-            添加子分类
-          </el-button>
-          <el-popconfirm
-            title="确定删除该分类吗？"
-            confirm-button-text="确定"
-            cancel-button-text="取消"
-            @confirm="handleDelete(row)"
-          >
-            <template #reference>
-              <el-button size="small" type="danger" link>删除</el-button>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
-    </el-table>
+      </el-tree>
+    </div>
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog
@@ -109,70 +136,175 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import type Node from 'element-plus/es/components/tree/src/model/node'
 import {
-  getCategoryTree, getCategoryList, getCategoryDetail,
+  getCategoryList, getCategoryDetail,
   addCategory, updateCategory, deleteCategory, updateCategoryStatus
 } from '@/api/category'
 
-// ---------- 表格 ----------
-const loading = ref(false)
-const tableData = ref<any[]>([])
+// ---------- 树配置 ----------
+const treeRef = ref()
+const treeProps = {
+  children: 'children',
+  label: 'name',
+  isLeaf: 'leaf'
+}
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const res = await getCategoryTree()
-    if (res.code === 200) {
-      tableData.value = res.data || []
-    } else {
-      // Fallback: fetch flat list
-      const listRes = await getCategoryList()
-      if (listRes.code === 200) {
-        tableData.value = listRes.data || []
-      }
+// ---------- 展开/折叠控制 ----------
+const expandAll = ref(true)
+
+const collectLoadedNonLeafKeys = (): number[] => {
+  if (!treeRef.value) return []
+  const keys: number[] = []
+  const traverse = (node: Node) => {
+    if (node.isLeaf || node.data?.level >= 3) return
+    if (!node.expanded) {
+      keys.push(node.key as number)
     }
-  } catch {
-    // Use mock data if API not ready
-    tableData.value = [
-      {
-        id: 1, parentId: 0, name: '女装', level: 1, sort: 1, showStatus: 1,
-        children: [
-          { id: 2, parentId: 1, name: '连衣裙', level: 2, sort: 1, showStatus: 1 },
-          { id: 3, parentId: 1, name: '衬衫', level: 2, sort: 2, showStatus: 1 },
-          { id: 4, parentId: 1, name: 'T恤', level: 2, sort: 3, showStatus: 1 }
-        ]
-      },
-      {
-        id: 7, parentId: 0, name: '首饰', level: 1, sort: 2, showStatus: 1,
-        children: [
-          { id: 8, parentId: 7, name: '项链', level: 2, sort: 1, showStatus: 1 },
-          { id: 9, parentId: 7, name: '耳环', level: 2, sort: 2, showStatus: 1 }
-        ]
-      },
-      {
-        id: 12, parentId: 0, name: '彩妆', level: 1, sort: 3, showStatus: 1,
-        children: [
-          { id: 13, parentId: 12, name: '口红', level: 2, sort: 1, showStatus: 1 },
-          { id: 14, parentId: 12, name: '眼影', level: 2, sort: 2, showStatus: 1 }
-        ]
+    if (node.childNodes) {
+      node.childNodes.forEach((child: Node) => traverse(child))
+    }
+  }
+  treeRef.value.root.childNodes.forEach((node: Node) => traverse(node))
+  return keys
+}
+
+const handleExpandAll = async () => {
+  expandAll.value = true
+  const maxRounds = 4
+  for (let round = 0; round < maxRounds; round++) {
+    await nextTick()
+    await new Promise(r => setTimeout(r, 100))
+    const keys = collectLoadedNonLeafKeys()
+    if (keys.length === 0) break
+    keys.forEach((key) => {
+      const node = treeRef.value.getNode(key)
+      if (node && !node.expanded && !node.isLeaf) {
+        node.expand()
       }
-    ]
-  } finally {
-    loading.value = false
+    })
   }
 }
 
+const handleCollapseAll = () => {
+  expandAll.value = false
+  if (!treeRef.value) return
+  const collapseNode = (node: Node) => {
+    if (node.childNodes) {
+      node.childNodes.forEach((child: Node) => {
+        collapseNode(child)
+      })
+    }
+    if (node.expanded) {
+      node.collapse()
+    }
+  }
+  treeRef.value.root.childNodes.forEach((node: Node) => collapseNode(node))
+}
+
+const onNodeExpand = () => { /* tracked by el-tree */ }
+const onNodeCollapse = () => { /* tracked by el-tree */ }
+
+// ---------- 懒加载 ----------
+const loading = ref(false)
+const treeData = ref<any[]>([])
+
+// Mock data per parent
+const mockChildrenMap: Record<number, any[]> = {
+  0: [
+    { id: 1, parentId: 0, name: '女装', level: 1, sort: 1, showStatus: 1 },
+    { id: 7, parentId: 0, name: '首饰', level: 1, sort: 2, showStatus: 1 },
+    { id: 12, parentId: 0, name: '彩妆', level: 1, sort: 3, showStatus: 1 }
+  ],
+  1: [
+    { id: 2, parentId: 1, name: '连衣裙', level: 2, sort: 1, showStatus: 1 },
+    { id: 3, parentId: 1, name: '衬衫', level: 2, sort: 2, showStatus: 1 },
+    { id: 4, parentId: 1, name: 'T恤', level: 2, sort: 3, showStatus: 1 }
+  ],
+  4: [
+    { id: 5, parentId: 4, name: '短袖T恤', level: 3, sort: 1, showStatus: 1 },
+    { id: 6, parentId: 4, name: '长袖T恤', level: 3, sort: 2, showStatus: 1 }
+  ],
+  7: [
+    { id: 8, parentId: 7, name: '项链', level: 2, sort: 1, showStatus: 1 },
+    { id: 9, parentId: 7, name: '耳环', level: 2, sort: 2, showStatus: 1 }
+  ],
+  12: [
+    { id: 13, parentId: 12, name: '口红', level: 2, sort: 1, showStatus: 1 },
+    { id: 14, parentId: 12, name: '眼影', level: 2, sort: 2, showStatus: 1 }
+  ]
+}
+
+const loadNode = (node: Node, resolve: (data: any[]) => void) => {
+  // node.level === 0: loading root nodes
+  const parentId = node.level === 0 ? 0 : (node.key as number)
+
+  getCategoryList({ parentId })
+    .then((res) => {
+      if (res.code === 200 && res.data?.length) {
+        const children = res.data.map((item: any) => ({
+          ...item,
+          leaf: item.level >= 3
+        }))
+        resolve(children)
+      } else {
+        // fallback to mock
+        const mock = mockChildrenMap[parentId] || []
+        const children = mock.map(item => ({ ...item, leaf: item.level >= 3 }))
+        resolve(children)
+      }
+    })
+    .catch(() => {
+      const mock = mockChildrenMap[parentId] || []
+      const children = mock.map(item => ({ ...item, leaf: item.level >= 3 }))
+      resolve(children)
+    })
+}
+
+// Refresh: reload from root
+const refreshTree = async () => {
+  loading.value = true
+  try {
+    const res = await getCategoryList({ parentId: 0 })
+    if (res.code === 200 && res.data?.length) {
+      treeData.value = res.data.map((item: any) => ({ ...item, leaf: item.level >= 3 }))
+    } else {
+      treeData.value = (mockChildrenMap[0] || []).map(item => ({ ...item, leaf: item.level >= 3 }))
+    }
+  } catch {
+    treeData.value = (mockChildrenMap[0] || []).map(item => ({ ...item, leaf: item.level >= 3 }))
+  } finally {
+    loading.value = false
+    await nextTick()
+    if (expandAll.value) {
+      handleExpandAll()
+    }
+  }
+}
+
+// ---------- 辅助 ----------
 const getLevelType = (level: number) => {
-  const map: Record<number, string> = { 1: '', 2: 'success', 3: 'warning' }
-  return map[level] || ''
+  const map: Record<number, string> = { 1: 'info', 2: 'success', 3: 'warning' }
+  return map[level] || 'info'
 }
 
 const getLevelLabel = (level: number) => {
   const map: Record<number, string> = { 1: '一级', 2: '二级', 3: '三级' }
   return map[level] || ''
+}
+
+const findCategoryInTree = (nodes: any[], id: number): any => {
+  for (const item of nodes) {
+    if (item.id === id) return item
+    if (item.children) {
+      const found = findCategoryInTree(item.children, id)
+      if (found) return found
+    }
+  }
+  return null
 }
 
 // ---------- 状态切换 ----------
@@ -181,10 +313,9 @@ const handleStatusChange = async (row: any, showStatus: number) => {
     const res = await updateCategoryStatus(row.id, showStatus)
     if (res.code === 200) {
       ElMessage.success(showStatus === 1 ? '已显示' : '已隐藏')
-      fetchData()
+      refreshTree()
     }
   } catch {
-    // Mock success
     ElMessage.success(showStatus === 1 ? '已显示' : '已隐藏')
     row.showStatus = showStatus
   }
@@ -229,23 +360,12 @@ const handleAdd = (parentId: number, level: number) => {
   formData.parentId = parentId
   formData.level = level
   if (parentId > 0) {
-    const parent = findCategoryById(tableData.value, parentId)
+    const parent = findCategoryInTree(treeData.value, parentId)
     parentName.value = parent?.name || '未知'
   } else {
     parentName.value = '顶级分类'
   }
   dialogVisible.value = true
-}
-
-const findCategoryById = (list: any[], id: number): any => {
-  for (const item of list) {
-    if (item.id === id) return item
-    if (item.children) {
-      const found = findCategoryById(item.children, id)
-      if (found) return found
-    }
-  }
-  return null
 }
 
 const handleEdit = async (row: any) => {
@@ -263,7 +383,7 @@ const handleEdit = async (row: any) => {
       formData.sort = data.sort || 0
       formData.showStatus = data.showStatus ?? 1
       if (data.parentId > 0) {
-        const parent = findCategoryById(tableData.value, data.parentId)
+        const parent = findCategoryInTree(treeData.value, data.parentId)
         parentName.value = parent?.name || '未知'
       } else {
         parentName.value = '顶级分类'
@@ -296,17 +416,16 @@ const handleSubmit = async () => {
       if (res && res.code === 200) {
         ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
         dialogVisible.value = false
-        fetchData()
+        refreshTree()
       } else {
-        // Mock success
         ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
         dialogVisible.value = false
-        fetchData()
+        refreshTree()
       }
     } catch {
       ElMessage.success(isEdit.value ? '编辑成功' : '新增成功')
       dialogVisible.value = false
-      fetchData()
+      refreshTree()
     } finally {
       submitting.value = false
     }
@@ -324,17 +443,126 @@ const handleDelete = async (row: any) => {
     // Mock success
   }
   ElMessage.success('删除成功')
-  fetchData()
+  refreshTree()
 }
 
 onMounted(() => {
-  fetchData()
+  refreshTree()
 })
 </script>
 
 <style scoped>
 .action-section {
   display: flex;
+  align-items: center;
   gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tree-container {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  padding: 16px 0;
+  min-height: 400px;
+}
+
+/* ── 树节点样式 ── */
+.tree-node-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  gap: 10px;
+}
+
+.tree-node-content:hover {
+  background-color: #fdf0f4;
+}
+
+.node-loading {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 18px;
+}
+
+.node-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid #f0f0f0;
+}
+
+.node-icon-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 18px;
+}
+
+.node-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.node-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.node-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #999;
+}
+
+.node-sort,
+.node-id {
+  color: #bbb;
+}
+
+.node-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── 树组件全局覆盖 ── */
+:deep(.el-tree-node__content) {
+  height: auto;
+  padding: 0;
+}
+
+:deep(.el-tree-node__content:hover) {
+  background-color: transparent;
+}
+
+:deep(.el-tree) {
+  padding: 0 16px;
+}
+
+:deep(.el-tree-node) {
+  margin: 2px 0;
 }
 </style>

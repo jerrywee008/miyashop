@@ -81,6 +81,12 @@ const routes: RouteRecordRaw[] = [
         ]
       },
       {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/Profile.vue'),
+        meta: { title: '个人中心' }
+      },
+      {
         path: 'user',
         name: 'User',
         redirect: '/user/list',
