@@ -225,37 +225,6 @@ const getTeamStatusText = (status: number) => {
   return map[status] || '未知'
 }
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const res = await getGroupBuyActivities({ page: pagination.page, size: pagination.size })
-    if (res.code === 200) {
-      const data = res.data
-      tableData.value = data.records || []
-      pagination.total = data.total || 0
-    }
-  } catch {
-    tableData.value = mockActivities
-    pagination.total = mockActivities.length
-  } finally {
-    loading.value = false
-    updateStats()
-  }
-}
-
-const updateStats = () => {
-  let notStarted = 0, running = 0, ended = 0
-  tableData.value.forEach(a => {
-    if (a.status === 0) notStarted++
-    else if (a.status === 1) running++
-    else if (a.status === 2) ended++
-  })
-  statsCards.value[0].value = notStarted
-  statsCards.value[1].value = running
-  statsCards.value[2].value = ended
-  statsCards.value[3].value = tableData.value.length
-}
-
 const mockActivities = [
   {
     id: 1, name: '连衣裙拼团优惠', skuId: 101, productName: '优雅碎花连衣裙', productImage: 'https://via.placeholder.com/50/FF6B95/FFFFFF',
@@ -273,6 +242,40 @@ const mockActivities = [
     startTime: '2024-05-20 00:00:00', endTime: '2024-05-31 23:59:59', status: 2, sort: 3
   }
 ]
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const res = await getGroupBuyActivities({ page: pagination.page, size: pagination.size })
+    if (res.code === 200) {
+      const data = res.data
+      tableData.value = data.records || []
+      pagination.total = data.total || 0
+    }
+  } catch {
+    // Mock fallback with pagination
+    const start = (pagination.page - 1) * pagination.size
+    const end = start + pagination.size
+    tableData.value = mockActivities.slice(start, end)
+    pagination.total = mockActivities.length
+  } finally {
+    loading.value = false
+    updateStats()
+  }
+}
+
+const updateStats = () => {
+  let notStarted = 0, running = 0, ended = 0
+  mockActivities.forEach(a => {
+    if (a.status === 0) notStarted++
+    else if (a.status === 1) running++
+    else if (a.status === 2) ended++
+  })
+  statsCards.value[0].value = notStarted
+  statsCards.value[1].value = running
+  statsCards.value[2].value = ended
+  statsCards.value[3].value = pagination.total
+}
 
 const productOptions = ref([
   { id: 101, name: '优雅碎花连衣裙-红色-S', price: 399 },
@@ -447,6 +450,11 @@ const viewTeamDetail = async (row: any) => {
     ElMessage.info(`队伍ID: ${row.id}, 团长: ${row.leaderName}`)
   }
 }
+
+// ---------- 页面加载 ----------
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>

@@ -181,6 +181,12 @@ const getStatusText = (status: number) => {
   return map[status] || '未知'
 }
 
+const mockActivities = [
+  { id: 1, name: '618年中大促秒杀', startTime: '2024-06-18 00:00:00', endTime: '2024-06-18 23:59:59', status: 0, skuCount: 10, sort: 1, createdTime: '2024-06-01 10:00:00' },
+  { id: 2, name: '周末限时秒杀', startTime: '2024-06-08 10:00:00', endTime: '2024-06-08 22:00:00', status: 0, skuCount: 5, sort: 2, createdTime: '2024-06-03 09:00:00' },
+  { id: 3, name: '端午节特惠秒杀', startTime: '2024-06-01 00:00:00', endTime: '2024-06-05 23:59:59', status: 2, skuCount: 8, sort: 3, createdTime: '2024-05-28 14:00:00' }
+]
+
 const fetchData = async () => {
   loading.value = true
   try {
@@ -191,7 +197,10 @@ const fetchData = async () => {
       pagination.total = data.total || 0
     }
   } catch {
-    tableData.value = mockActivities
+    // Mock fallback with pagination
+    const start = (pagination.page - 1) * pagination.size
+    const end = start + pagination.size
+    tableData.value = mockActivities.slice(start, end)
     pagination.total = mockActivities.length
   } finally {
     loading.value = false
@@ -209,14 +218,8 @@ const updateStats = () => {
   statsCards.value[0].value = notStarted
   statsCards.value[1].value = running
   statsCards.value[2].value = ended
-  statsCards.value[3].value = tableData.value.length
+  statsCards.value[3].value = pagination.total
 }
-
-const mockActivities = [
-  { id: 1, name: '618年中大促秒杀', startTime: '2024-06-18 00:00:00', endTime: '2024-06-18 23:59:59', status: 0, skuCount: 10, sort: 1, createdTime: '2024-06-01 10:00:00' },
-  { id: 2, name: '周末限时秒杀', startTime: '2024-06-08 10:00:00', endTime: '2024-06-08 22:00:00', status: 0, skuCount: 5, sort: 2, createdTime: '2024-06-03 09:00:00' },
-  { id: 3, name: '端午节特惠秒杀', startTime: '2024-06-01 00:00:00', endTime: '2024-06-05 23:59:59', status: 2, skuCount: 8, sort: 3, createdTime: '2024-05-28 14:00:00' }
-]
 
 // ---------- 新增/编辑 ----------
 const dialogVisible = ref(false)
@@ -370,6 +373,11 @@ const removeSku = (row: any) => {
   activitySkus.value = activitySkus.value.filter(s => s.id !== row.id)
   ElMessage.success('已移除')
 }
+
+// ---------- 页面加载 ----------
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>
