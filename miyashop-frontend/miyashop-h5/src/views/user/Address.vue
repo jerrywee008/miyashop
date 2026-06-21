@@ -220,7 +220,7 @@ const confirmRegion = () => {
   showRegion.value = false
 }
 
-const goBack = () => { window.location.hash = '#/' }
+const goBack = () => { window.location.hash = '#/user' }
 </script>
 
 <style scoped>

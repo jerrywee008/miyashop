@@ -64,6 +64,59 @@ services:
       redis:
         condition: service_healthy
 
+  # ---------- MinIO (S3 兼容对象存储) ----------
+  minio:
+    image: minio/minio:latest
+    container_name: miyashop-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      TZ: Asia/Shanghai
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web Console
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Go 图片服务器 ----------
+  image-server:
+    build:
+      context: ./miyashop-image-server
+      dockerfile: Dockerfile
+    container_name: miyashop-image-server
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      MIYASHOP_SERVER_PORT: "8081"
+      MIYASHOP_SERVER_MODE: release
+      MIYASHOP_S3_PROVIDER: minio
+      MIYASHOP_S3_ENDPOINT: minio:9000
+      MIYASHOP_S3_REGION: us-east-1
+      MIYASHOP_S3_BUCKET: miyashop-images
+      MIYASHOP_S3_ACCESS_KEY: minioadmin
+      MIYASHOP_S3_SECRET_KEY: minioadmin
+      MIYASHOP_S3_USE_SSL: "false"
+      MIYASHOP_S3_PATH_STYLE: "true"
+      MIYASHOP_JWT_SECRET: miyashop-secret-key-2024-very-long-and-secure-key-for-jwt-token-generation
+      MIYASHOP_JWT_EXPIRATION: "86400"
+      MIYASHOP_WATERMARK_ENABLED: "true"
+      MIYASHOP_WATERMARK_TEXT: "MiyaShop"
+      MIYASHOP_WATERMARK_POSITION: bottom-right
+      MIYASHOP_LOG_LEVEL: info
+      MIYASHOP_LOG_FORMAT: console
+      TZ: Asia/Shanghai
+    depends_on:
+      minio:
+        condition: service_healthy
+
   # ---------- 后台管理系统 ----------
   admin:
     build:
@@ -91,3 +144,4 @@ services:
 volumes:
   mysql-data:
   redis-data:
+  minio-data:

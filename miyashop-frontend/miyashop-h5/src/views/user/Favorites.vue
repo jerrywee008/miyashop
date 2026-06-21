@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-const goBack = () => { window.location.hash = '#/' }
+const goBack = () => { window.location.hash = '#/user' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog, showSuccessToast } from 'vant'

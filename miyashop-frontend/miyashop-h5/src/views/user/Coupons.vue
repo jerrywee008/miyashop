@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-const goBack = () => { window.location.hash = '#/' }
+const goBack = () => { window.location.hash = '#/user' }
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
@@ -72,7 +72,7 @@ const filteredCoupons = computed(() => {
 })
 
 const useCoupon = (coupon: any) => {
-  window.location.hash = '#/'
+  window.location.hash = '#/user'
   showToast(`满${coupon.minAmount}元可用`)
 }
 

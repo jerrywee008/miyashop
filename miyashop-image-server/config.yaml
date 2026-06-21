@@ -1,0 +1,52 @@
+server:
+  port: 8081
+  mode: release          # debug | release | test
+
+s3:
+  provider: minio        # aws | minio | alibaba
+  endpoint: localhost:9000
+  region: us-east-1
+  bucket: miyashop-images
+  access_key: minioadmin
+  secret_key: minioadmin
+  use_ssl: false
+  public_url: ""         # CDN/public base URL; if empty, images served through Go server
+  path_style: true       # true for MinIO (path-style addressing), false for AWS (virtual-hosted)
+
+jwt:
+  secret: miyashop-secret-key-2024-very-long-and-secure-key-for-jwt-token-generation
+  expiration: 86400      # seconds (24 hours)
+
+image:
+  max_file_size: 10485760    # 10 MB
+  allowed_types:
+    - image/jpeg
+    - image/png
+    - image/webp
+    - image/gif
+  max_width: 2048
+  max_height: 2048
+  jpeg_quality: 85
+  thumbnail_sizes:
+    - name: small
+      width: 200
+      height: 200
+    - name: medium
+      width: 400
+      height: 400
+    - name: large
+      width: 800
+      height: 800
+
+watermark:
+  enabled: false
+  type: text             # text | image
+  text: "MiyaShop"
+  image_path: ""         # path to watermark PNG image (used when type=image)
+  position: bottom-right # bottom-right | bottom-left | top-right | top-left | center
+  opacity: 0.3           # 0.0 - 1.0
+  margin: 20             # pixels from edge
+
+log:
+  level: info            # debug | info | warn | error
+  format: console        # console | json
