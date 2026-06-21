@@ -3,12 +3,12 @@ server:
   mode: release          # debug | release | test
 
 s3:
-  provider: minio        # aws | minio | alibaba
-  endpoint: localhost:9000
-  region: us-east-1
-  bucket: miyashop-images
-  access_key: minioadmin
-  secret_key: minioadmin
+  provider: tc        # aws | minio | alibaba
+  endpoint: https://cos.ap-shanghai.myqcloud.com
+  region: ap-shanghai
+  bucket: miyashop-1317790566
+  access_key: 
+  secret_key: 
   use_ssl: false
   public_url: ""         # CDN/public base URL; if empty, images served through Go server
   path_style: true       # true for MinIO (path-style addressing), false for AWS (virtual-hosted)

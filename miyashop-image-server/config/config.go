@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -79,6 +80,10 @@ type LogConfig struct {
 // LoadConfig reads config.yaml and merges environment variables.
 // Environment variables use the prefix MIYASHOP_ and replace dots/separators with underscores.
 // Example: MIYASHOP_SERVER_PORT overrides server.port, MIYASHOP_S3_BUCKET overrides s3.bucket.
+//
+// S3 credentials (access_key / secret_key) are resolved from environment variables:
+//  1. MIYASHOP_S3_ACCESS_KEY / MIYASHOP_S3_SECRET_KEY (project-specific, highest priority)
+//  2. Provider-specific fallback env vars (see resolveS3Credentials)
 func LoadConfig(configPath string) (*Config, error) {
 	v := viper.New()
 
@@ -102,6 +107,11 @@ func LoadConfig(configPath string) (*Config, error) {
 
 	// Set defaults for optional fields
 	cfg.setDefaults()
+
+	// Resolve S3 credentials from environment variables.
+	// If access_key / secret_key are still empty after Viper's AutomaticEnv,
+	// try provider-specific env vars as fallback.
+	resolveS3Credentials(&cfg)
 
 	return &cfg, nil
 }
@@ -138,5 +148,64 @@ func (c *Config) setDefaults() {
 			{Name: "medium", Width: 400, Height: 400},
 			{Name: "large", Width: 800, Height: 800},
 		}
+	}
+}
+
+// resolveS3Credentials fills in S3 AccessKey and SecretKey from environment variables
+// if they are not already set (via config file or MIYASHOP_* vars).
+//
+// Priority for each field (access_key / secret_key independently):
+//  1. MIYASHOP_S3_ACCESS_KEY / MIYASHOP_S3_SECRET_KEY (handled by Viper's AutomaticEnv)
+//  2. Provider-specific env vars based on s3.provider:
+//     - "aws":      AWS_ACCESS_KEY_ID     / AWS_SECRET_ACCESS_KEY
+//     - "alibaba":  ALIBABA_CLOUD_ACCESS_KEY_ID / ALIBABA_CLOUD_ACCESS_KEY_SECRET
+//     - "minio":    MINIO_ROOT_USER       / MINIO_ROOT_PASSWORD
+//     - "tc" (腾讯): COS_SECRET_ID         / COS_SECRET_KEY (or TENCENTCLOUD_SECRET_ID / TENCENTCLOUD_SECRET_KEY)
+func resolveS3Credentials(cfg *Config) {
+	// AccessKey
+	if cfg.S3.AccessKey == "" {
+		cfg.S3.AccessKey = lookupAK(cfg.S3.Provider)
+	}
+	// SecretKey
+	if cfg.S3.SecretKey == "" {
+		cfg.S3.SecretKey = lookupSK(cfg.S3.Provider)
+	}
+}
+
+// lookupAK returns the Access Key from provider-specific environment variables.
+func lookupAK(provider string) string {
+	switch strings.ToLower(provider) {
+	case "aws":
+		return os.Getenv("AWS_ACCESS_KEY_ID")
+	case "alibaba", "aliyun", "oss":
+		return os.Getenv("ALIBABA_CLOUD_ACCESS_KEY_ID")
+	case "minio":
+		return os.Getenv("MINIO_ROOT_USER")
+	case "tc", "tencent", "cos":
+		if v := os.Getenv("COS_SECRET_ID"); v != "" {
+			return v
+		}
+		return os.Getenv("TENCENTCLOUD_SECRET_ID")
+	default:
+		return ""
+	}
+}
+
+// lookupSK returns the Secret Key from provider-specific environment variables.
+func lookupSK(provider string) string {
+	switch strings.ToLower(provider) {
+	case "aws":
+		return os.Getenv("AWS_SECRET_ACCESS_KEY")
+	case "alibaba", "aliyun", "oss":
+		return os.Getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
+	case "minio":
+		return os.Getenv("MINIO_ROOT_PASSWORD")
+	case "tc", "tencent", "cos":
+		if v := os.Getenv("COS_SECRET_KEY"); v != "" {
+			return v
+		}
+		return os.Getenv("TENCENTCLOUD_SECRET_KEY")
+	default:
+		return ""
 	}
 }

@@ -47,6 +47,7 @@ func SuccessMsg(message string, data interface{}) Result {
 }
 
 // Error returns an error response with a specific code and message.
+// Result implements the error interface so it can be used as a Go error value.
 func Error(code int, message string) Result {
 	return Result{
 		Code:      code,
@@ -54,6 +55,11 @@ func Error(code int, message string) Result {
 		Data:      nil,
 		Timestamp: time.Now().UnixMilli(),
 	}
+}
+
+// Error implements the error interface, allowing Result to be returned as a Go error.
+func (r Result) Error() string {
+	return r.Message
 }
 
 // ErrorMsg returns a generic error response (code 500).

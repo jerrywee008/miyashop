@@ -100,12 +100,11 @@ func main() {
 	router.GET("/health", h.Health)
 
 	// Image serving routes (public - no auth required for viewing)
-	// NOTE: Order matters! Specific routes before wildcard routes.
-	thumbnailGroup := router.Group("/api/images/thumb")
-	{
-		thumbnailGroup.GET("/:size/*key", h.GetThumbnail)
-	}
-	router.GET("/api/images/*key", h.Download)
+	// Gin does not allow a catch-all wildcard at the same tree level as a static segment,
+	// so we use :prefix to capture the first path component (e.g., "original", "watermark")
+	// instead of a bare *key alongside /thumb/.
+	router.GET("/api/images/thumb/:size/*key", h.GetThumbnail)
+	router.GET("/api/images/:prefix/*key", h.Download)
 
 	// --- Authenticated routes (admin only) ---
 	authGroup := router.Group("/api/images")

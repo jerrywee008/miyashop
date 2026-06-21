@@ -12,7 +12,6 @@ import (
 
 	"miyashop-image-server/internal/model"
 	"miyashop-image-server/internal/service"
-	"miyashop-image-server/internal/storage"
 )
 
 // ImageHandler handles HTTP requests for image operations.
@@ -64,16 +63,17 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 	}
 }
 
-// Download handles GET /api/images/*key
+// Download handles GET /api/images/:prefix/*key
 // Serves the image directly or redirects to a pre-signed URL.
 func (h *ImageHandler) Download(c *gin.Context) {
+	prefix := c.Param("prefix")
 	key := c.Param("key")
-	if key == "" {
+	if prefix == "" || key == "" {
 		c.JSON(http.StatusBadRequest, model.Error(model.CodeBadRequest, "缺少图片key"))
 		return
 	}
-	// Trim leading slash from wildcard capture
-	key = strings.TrimPrefix(key, "/")
+	// Reconstruct full key: "prefix/rest_of_key"
+	key = prefix + "/" + strings.TrimPrefix(key, "/")
 
 	// Check cache headers
 	if h.handleCache(c, key) {

@@ -241,8 +241,6 @@ func GetLocalURL(baseURL, key string) string {
 	if u[len(u)-1] != '/' {
 		u += "/"
 	}
-	// The key already contains the prefix like "original/xxx.jpg"
-	escapedKey := url.PathEscape(key)
 	// Replace each path segment's escaped slashes to keep the key structure
 	return u + "api/images/" + key
 }
