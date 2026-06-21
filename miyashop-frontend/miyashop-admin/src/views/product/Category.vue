@@ -213,8 +213,12 @@ const loading = ref(false)
 const treeData = ref<any[]>([])
 
 const loadNode = (node: Node, resolve: (data: any[]) => void) => {
-  // node.level === 0: loading root nodes
-  const parentId = node.level === 0 ? 0 : (node.key as number)
+  // node.level === 0: root already provided by treeData, skip
+  if (node.level === 0) {
+    resolve([])
+    return
+  }
+  const parentId = node.key as number
 
   getCategoryList({ parentId })
     .then((res) => {
@@ -234,7 +238,7 @@ const loadNode = (node: Node, resolve: (data: any[]) => void) => {
     })
 }
 
-// Refresh: reload from root
+// Refresh: reload root categories from API
 const refreshTree = async () => {
   loading.value = true
   try {
