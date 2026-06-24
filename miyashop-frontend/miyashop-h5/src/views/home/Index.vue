@@ -91,11 +91,10 @@
 <script setup lang="ts">
 defineOptions({ name: 'HomePage' })
 import { ref, computed, onMounted } from 'vue'
-import { showToast } from 'vant'
 import TabBar from '@/components/TabBar.vue'
 import { useUserStore } from '@/store/user'
-import { getCategoryList, getProductList, getProductDetail } from '@/api/product'
-import { getSeckillActivities } from '@/api/seckill'
+import { getCategoryList, getProductList, getSkuList } from '@/api/product'
+import { getSeckillActivities, getSeckillSkus } from '@/api/seckill'
 import { getGroupBuyActivities } from '@/api/groupbuy'
 import { getCartCount } from '@/api/cart'
 
@@ -157,22 +156,60 @@ const loadBanners = async () => {
 const loadSeckill = async () => {
   try {
     const res = await getSeckillActivities()
-    if (res.code === 200) {
-      const activities = res.data?.records || res.data || []
-      seckillProducts.value = activities.slice(0, 4).map((a: any) => ({
-        ...a,
-        image: a.productImage || a.image || defaultProductImg
-      }))
-    }
+    if (res.code !== 200) return
+    const activities = res.data?.records || res.data || []
+    if (activities.length === 0) return
+
+    // 获取所有上架SKU，用于匹配图片
+    const skuRes = await getSkuList({ page: 1, size: 200, status: 1 })
+    const allSkus = skuRes.code === 200 ? (skuRes.data?.records || []) : []
+
+    // 获取第一个活动下的SKU列表
+    const firstActivity = activities[0]
+    let activitySkus: any[] = []
+    try {
+      const skuListRes = await getSeckillSkus(firstActivity.id)
+      if (skuListRes.code === 200) {
+        activitySkus = skuListRes.data || []
+      }
+    } catch { /* ignore */ }
+
+    seckillProducts.value = activitySkus.slice(0, 4).map((ss: any) => {
+      const info = allSkus.find((s: any) => s.id === ss.skuId) || {}
+      return {
+        id: ss.skuId,
+        productId: info.productId,
+        name: info.name || `秒杀商品`,
+        image: info.image || defaultProductImg,
+        seckillPrice: ss.seckillPrice,
+        originalPrice: info.price || 0
+      }
+    })
   } catch { /* ignore */ }
 }
 
 const loadGroupbuy = async () => {
   try {
     const res = await getGroupBuyActivities()
-    if (res.code === 200) {
-      groupbuyProducts.value = (res.data?.records || res.data || []).slice(0, 4)
-    }
+    if (res.code !== 200) return
+    const activities = res.data?.records || res.data || []
+    if (activities.length === 0) return
+
+    // 获取所有上架SKU，用于匹配图片
+    const skuRes = await getSkuList({ page: 1, size: 200, status: 1 })
+    const allSkus = skuRes.code === 200 ? (skuRes.data?.records || []) : []
+
+    groupbuyProducts.value = activities.slice(0, 4).map((a: any) => {
+      const info = allSkus.find((s: any) => s.id === a.skuId) || {}
+      return {
+        ...a,
+        productName: info.name || a.name,
+        image: info.image || defaultProductImg,
+        productImage: info.image || defaultProductImg,
+        currentPeople: a.currentPeople || 0,
+        progress: a.currentPeople && a.minPeople ? Math.round(a.currentPeople / a.minPeople * 100) : 0
+      }
+    })
   } catch { /* ignore */ }
 }
 

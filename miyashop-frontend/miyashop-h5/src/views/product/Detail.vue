@@ -231,7 +231,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/store/user'
-import { getProductDetail, getProductReviews } from '@/api/product'
+import { getProductDetail, getProductReviews, getSkuList } from '@/api/product'
 import { addToCart as addCartApi } from '@/api/cart'
 
 const router = useRouter()
@@ -287,7 +287,7 @@ const deliveryInfo = ref('全国包邮（港澳台及偏远地区除外）')
 const serviceTags = ref(['7天无理由退换', '正品保证', '极速退款'])
 
 const selectSku = (sku: any) => {
-  if (sku.stock <= 0) return
+  if (sku.stock <= 0 && sku.id > 0) return  // 兜底规格（id=-1）允许无库存时选中
   selectedSkuId.value = sku.id
   if (quantity.value > sku.stock) {
     quantity.value = sku.stock
@@ -309,7 +309,7 @@ const skuSheetMode = ref<'cart' | 'buy'>('cart')
 const skuSheetQuantity = ref(1)
 
 const addToCart = () => {
-  if (!selectedSkuId.value) {
+  if (selectedSkuId.value == null) {
     skuSheetMode.value = 'cart'
     skuSheetQuantity.value = quantity.value
     skuSheetVisible.value = true
@@ -319,7 +319,7 @@ const addToCart = () => {
 }
 
 const buyNow = () => {
-  if (!selectedSkuId.value) {
+  if (selectedSkuId.value == null) {
     skuSheetMode.value = 'buy'
     skuSheetQuantity.value = quantity.value
     skuSheetVisible.value = true
@@ -338,14 +338,26 @@ const confirmSkuSheet = () => {
 }
 
 const doAddToCart = async () => {
-  if (!selectedSkuId.value) return
+  if (selectedSkuId.value == null) {
+    showToast('请先选择商品规格')
+    return
+  }
+  if (!product.value.id) {
+    showToast('商品数据加载中，请稍后')
+    return
+  }
   try {
-    const res = await addCartApi({ skuId: selectedSkuId.value, quantity: quantity.value })
+    const res = await addCartApi({
+      productId: product.value.id,
+      skuId: selectedSkuId.value,
+      quantity: quantity.value
+    })
     if (res.code === 200) {
       showToast('已加入购物车')
       userStore.setCartCount((userStore.cartCount || 0) + quantity.value)
     }
-  } catch {
+  } catch (e: any) {
+    console.error('加入购物车失败', e)
     showToast('加入购物车失败')
   }
 }
@@ -400,9 +412,31 @@ onMounted(async () => {
       if (res.data.images) {
         productImages.value = res.data.images.split(',').filter(Boolean)
       }
-      // Parse SKUs
-      const skus = res.data.skus || res.data.skuList || []
-      if (skus.length > 0) product.value.skus = skus
+      // 从 SKU API 获取该商品的所有 SKU
+      try {
+        const skuRes = await getSkuList({ productId: res.data.id, page: 1, size: 200 })
+        if (skuRes.code === 200 && skuRes.data?.records?.length) {
+          product.value.skus = skuRes.data.records.map((s: any) => ({
+            id: s.id,
+            specs: s.specs || s.name || '默认',
+            price: s.price,
+            originalPrice: s.price,
+            stock: s.stock || 0,
+            image: s.image
+          }))
+        }
+      } catch { /* ignore */ }
+      // 如果没有 SKU 记录，用商品自身数据构造一个默认规格
+      if (!product.value.skus || product.value.skus.length === 0) {
+        product.value.skus = [{
+          id: -1,
+          specs: '默认',
+          price: product.value.price || 0,
+          originalPrice: product.value.price || 0,
+          stock: Math.max(product.value.stock || 0, 1),
+          image: ''
+        }]
+      }
       // Try to load reviews
       try {
         const reviewRes = await getProductReviews(res.data.id, { page: 1, size: 5 })
@@ -411,8 +445,9 @@ onMounted(async () => {
         }
       } catch { /* ignore */ }
     }
-  } catch { /* ignore */ }
-  finally { loading.value = false }
+  } catch (e) {
+    console.error('获取商品详情失败', e)
+  } finally { loading.value = false }
   // 默认选中第一个有库存的SKU
   const firstAvailable = (product.value.skus || []).find((s: any) => s.stock > 0)
   if (firstAvailable) {

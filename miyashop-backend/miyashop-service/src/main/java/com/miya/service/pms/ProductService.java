@@ -15,6 +15,11 @@ public interface ProductService extends IService<PmsProduct> {
     Page<PmsProduct> pageList(Integer page, Integer size, String name, Long categoryId, Integer status);
 
     /**
+     * 推荐商品（按销量排序，只查上架商品）
+     */
+    Page<PmsProduct> pageRecommend(Integer page, Integer size);
+
+    /**
      * 上架商品
      */
     void onShelf(Long id);

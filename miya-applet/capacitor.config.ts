@@ -5,9 +5,10 @@ const config: CapacitorConfig = {
   appName: 'MiyaShop',
   webDir: 'dist',
   server: {
-    // 开发阶段允许 HTTP 请求，生产环境应移除
     cleartext: true,
-    // iOS/Android 默认加载本地 web assets，也可配置远程 URL
+    // 开发阶段：从 vite dev server 加载（API 请求通过 vite proxy → backend:8080）
+    // 上线前删除 url 这行，改回 webDir 本地加载
+    url: 'http://localhost:3002',
   },
   ios: {
     contentInset: 'always',

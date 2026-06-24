@@ -1,20 +1,28 @@
 package com.miya.common.entity.oms;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.miya.common.entity.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
- * 购物车表
+ * 购物车表（oms_cart 表无 deleted/created_time/updated_time 字段，不继承 BaseEntity）
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @TableName("oms_cart")
 @Schema(description = "购物车")
-public class OmsCart extends BaseEntity {
+public class OmsCart implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @TableId(type = IdType.AUTO)
+    @Schema(description = "主键ID")
+    private Long id;
 
     @TableField("user_id")
     @Schema(description = "用户ID")

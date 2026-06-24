@@ -33,8 +33,8 @@ public abstract class BaseEntity implements Serializable {
     private LocalDateTime updatedTime;
 
     /**
-     * 删除标记
+     * 删除标记（不使用 @TableLogic，避免对无 deleted 列的表自动追加 WHERE deleted=0 导致报错）
      */
-    @TableLogic
+    @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

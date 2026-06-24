@@ -5,6 +5,7 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/ums/UmsMember.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/vo/DashboardVO.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/constant/OrderStatus.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/vo/GroupBuyActivityVO.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/oms/OmsRefund.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/sys/SysMenu.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/exception/BusinessException.java
@@ -13,6 +14,7 @@
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/pms/PmsProduct.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/sys/SysRole.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/sys/SysUser.java
+/Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/vo/SeckillSkuVO.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/vo/SkuVO.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/pms/PmsCategory.java
 /Users/jerrywei/work/workspace/miyashop/miyashop-backend/miyashop-common/src/main/java/com/miya/common/entity/ums/UmsAddress.java

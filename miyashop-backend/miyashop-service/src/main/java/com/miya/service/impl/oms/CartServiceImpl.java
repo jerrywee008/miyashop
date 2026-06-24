@@ -22,7 +22,6 @@ public class CartServiceImpl extends ServiceImpl<OmsCartMapper, OmsCart> impleme
     public List<OmsCart> getUserCart(Long userId) {
         LambdaQueryWrapper<OmsCart> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(OmsCart::getUserId, userId);
-        wrapper.orderByDesc(OmsCart::getCreatedTime);
         return list(wrapper);
     }
 

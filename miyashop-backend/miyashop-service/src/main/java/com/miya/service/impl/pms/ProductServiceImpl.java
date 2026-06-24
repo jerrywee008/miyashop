@@ -38,6 +38,15 @@ public class ProductServiceImpl extends ServiceImpl<PmsProductMapper, PmsProduct
     }
 
     @Override
+    public Page<PmsProduct> pageRecommend(Integer page, Integer size) {
+        LambdaQueryWrapper<PmsProduct> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PmsProduct::getStatus, 1); // 只查上架商品
+        wrapper.orderByDesc(PmsProduct::getSales);
+        wrapper.orderByDesc(PmsProduct::getScore);
+        return page(new Page<>(page, size), wrapper);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void onShelf(Long id) {
         PmsProduct product = getById(id);

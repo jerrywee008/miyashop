@@ -81,6 +81,20 @@ const routes: RouteRecordRaw[] = [
         ]
       },
       {
+        path: 'coupon',
+        name: 'Coupon',
+        redirect: '/coupon/list',
+        meta: { title: '优惠券管理', icon: 'Ticket' },
+        children: [
+          {
+            path: 'list',
+            name: 'CouponList',
+            component: () => import('@/views/marketing/CouponList.vue'),
+            meta: { title: '优惠券列表' }
+          }
+        ]
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('@/views/Profile.vue'),

@@ -115,7 +115,17 @@
           <el-input v-model="formData.name" placeholder="请输入分类名称" />
         </el-form-item>
         <el-form-item label="分类图标">
-          <el-input v-model="formData.icon" placeholder="请输入图标URL" />
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%">
+            <el-input v-model="formData.icon" placeholder="请输入图标URL或上传图片" style="flex: 1" />
+            <el-upload
+              :show-file-list="false"
+              :before-upload="handleIconUpload"
+              accept="image/*"
+            >
+              <el-button type="primary" :loading="iconUploading">上传</el-button>
+            </el-upload>
+          </div>
+          <el-image v-if="formData.icon" :src="formData.icon" style="width: 60px; height: 60px; border-radius: 6px; margin-top: 8px" fit="cover" />
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="formData.sort" :min="0" :step="1" />
@@ -144,6 +154,8 @@ import {
   getCategoryList, getCategoryDetail,
   addCategory, updateCategory, deleteCategory, updateCategoryStatus
 } from '@/api/category'
+import { uploadImage } from '@/api/upload'
+import type { UploadProps } from 'element-plus'
 
 // ---------- 树配置 ----------
 const treeRef = ref()
@@ -312,6 +324,25 @@ const formData = reactive({
 
 const formRules: FormRules = {
   name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }]
+}
+
+// ---------- 图标上传 ----------
+const iconUploading = ref(false)
+
+const handleIconUpload: UploadProps['beforeUpload'] = async (rawFile) => {
+  iconUploading.value = true
+  try {
+    const res = await uploadImage(rawFile as File)
+    if (res && res.data && res.data.url) {
+      formData.icon = res.data.url
+      ElMessage.success('图标上传成功')
+    }
+  } catch {
+    ElMessage.error('图标上传失败')
+  } finally {
+    iconUploading.value = false
+  }
+  return false // 阻止 el-upload 默认上传行为
 }
 
 const resetForm = () => {

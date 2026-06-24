@@ -40,6 +40,14 @@ public class ProductController {
         return Result.success(productService.pageList(page, size, name, categoryId, status));
     }
 
+    @GetMapping("/recommend")
+    @Operation(summary = "推荐商品列表（按销量排序）")
+    public Result<Page<PmsProduct>> recommend(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer size) {
+        return Result.success(productService.pageRecommend(page, size));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "商品详情")
     public Result<PmsProduct> detail(@Parameter(description = "商品ID") @PathVariable Long id) {

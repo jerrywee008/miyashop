@@ -142,7 +142,7 @@ import TabBar from '@/components/TabBar.vue'
 import { showToast, showConfirmDialog } from 'vant'
 import { useUserStore } from '@/store/user'
 import { getCartList, updateCartItem, updateCartItemSelected, deleteCartItem, selectAllCart } from '@/api/cart'
-import { getRecommendProducts } from '@/api/product'
+import { getRecommendProducts, getProductDetail } from '@/api/product'
 
 const userStore = useUserStore()
 const editMode = ref(false)
@@ -290,8 +290,28 @@ const fetchCartList = async () => {
   try {
     const res: any = await getCartList()
     if (res?.code === 200 && res.data) {
-      cartItems.value = (res.data.items || res.data).map((i: any) => ({ ...i, checked: !!i.checked || !!i.selected }))
-      userStore.setCartCount(cartItems.value.reduce((sum, i) => sum + i.quantity, 0))
+      const rawItems: any[] = res.data.items || res.data
+      // 批量获取所有商品ID对应的产品图片（去重）
+      const productIds = [...new Set(rawItems.map((i: any) => i.productId))]
+      const productImages: Record<number, string> = {}
+      await Promise.all(productIds.map(async (pid: number) => {
+        try {
+          const pres: any = await getProductDetail(pid)
+          if (pres?.code === 200 && pres.data?.images) {
+            productImages[pid] = pres.data.images.split(',')[0]
+          }
+        } catch { /* ignore */ }
+      }))
+      // 为每个 cart item 补充图片/名称
+      const enriched = rawItems.map((i: any) => ({
+        ...i,
+        checked: !!i.checked || !!i.selected,
+        image: productImages[i.productId] || '',
+        name: `商品 #${i.productId}`,
+        price: 0
+      }))
+      cartItems.value = enriched
+      userStore.setCartCount(enriched.reduce((sum, i) => sum + i.quantity, 0))
     }
   } catch { /* ignore */ }
 }
@@ -303,7 +323,7 @@ const fetchRecommendProducts = async () => {
       recommendProducts.value = (res.data.records || res.data).map((p: any) => ({
         id: p.id,
         productId: p.id,
-        image: p.image || p.pic || p.cover,
+        image: p.images ? p.images.split(',')[0] : (p.image || ''),
         name: p.name || p.title,
         price: p.price
       }))

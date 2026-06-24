@@ -93,6 +93,9 @@ const menuRoutes = [
   { path: '/seckill', meta: { title: '秒杀管理', icon: 'Lightning' }, children: [
     { path: 'activity', meta: { title: '秒杀活动' } }
   ]},
+  { path: '/coupon', meta: { title: '优惠券管理', icon: 'Ticket' }, children: [
+    { path: 'list', meta: { title: '优惠券列表' } }
+  ]},
   { path: '/groupbuy', meta: { title: '团购管理', icon: 'Users' }, children: [
     { path: 'activity', meta: { title: '团购活动' } }
   ]},

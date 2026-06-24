@@ -6,7 +6,7 @@ export function getCartList() {
 }
 
 // 添加商品到购物车
-export function addToCart(data: { skuId: number; quantity: number }) {
+export function addToCart(data: { productId: number; skuId: number; quantity: number }) {
   return request.post('/cart/add', data)
 }
 
